@@ -1,3 +1,3 @@
-javascript: (
-  alert('Hello world!');
-)();
+javascript: (() => {
+  alert('Hello world!')
+})()
