@@ -1,0 +1,88 @@
+.ct-chart-donut .ct-series {
+  stroke: #ffffff;
+  stroke-width: 2px;
+}
+.ct-chart-donut .ct-label {
+  dominant-baseline: initial;
+}
+
+.ct-label {
+  font-weight: bold;
+  fill: rgba(0, 0, 0, 0.87);
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 12px;
+}
+.ct-label--strong {
+  font-size: 21px;
+}
+.ct-label--border {
+  fill: #ffffff;
+  stroke: #ffffff;
+  stroke-width: 3px;
+}
+
+.ct-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 50%;
+}
+.ct-container .ct-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+}
+.ct-container .ct-background.ct-background--transparent {
+  background: url(../../public/transparent-bg.png);
+}
+.ct-container .ct-chart {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.ct-container .ct-title {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.87);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: center;
+  line-height: 1.25;
+}
+.ct-container .ct-title--border {
+  color: #ffffff;
+  text-stroke: 3px #ffffff;
+  -webkit-text-stroke: 3px #ffffff;
+}
+.ct-container .ct-message {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.38);
+  text-align: center;
+}
+.ct-container .ct-message .v-icon {
+  color: inherit;
+}
+.ct-container .ct-signature {
+  position: absolute;
+  right: 15px;
+  bottom: 10px;
+  font-size: 6px;
+  color: rgba(0, 0, 0, 0.38);
+}
+.ct-container .ct-signature .v-icon {
+  font-size: 10.5px;
+  color: inherit;
+  vertical-align: inherit;
+}/*# sourceMappingURL=style.css.map */
