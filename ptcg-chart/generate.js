@@ -13,7 +13,7 @@ javascript: (async () => {
 
       this.el = ImagePieChart.injectChart(parentEl)
       this.chart = new Chartist.Pie(
-        `#${this.el.id}`,
+        '#ct-chart',
         this.chartistData,
         this.chartistOptions
       )
@@ -211,13 +211,16 @@ javascript: (async () => {
 
     static injectChart(parentEl) {
       // do nothing if elements have been already injected
-      let chartEl = document.querySelector('#ct-chart')
+      let chartEl = document.getElementById('ct-chart')
       if (chartEl) {
         return chartEl
       }
 
       const el = document.createElement('div')
-      el.style['max-width'] = '720px'
+      el.id = 'ct-canvas'
+      el.style['width'] = '720px'
+      el.style['position'] = 'absolute'
+      el.style['opacity'] = 0.0
 
       const containerEl = document.createElement('div')
       containerEl.className = 'ct-container'
@@ -230,7 +233,7 @@ javascript: (async () => {
       el.appendChild(containerEl)
       parentEl.appendChild(el)
 
-      return chartEl
+      return el
     }
 
     static drawText(parentEl, text, attributes) {
@@ -418,6 +421,10 @@ javascript: (async () => {
       const canvas = await html2canvas(self.el, {
         scale: 16 / 9,
         backgroundColor: !self.transparentBackground ? '#ffffff' : null,
+        onclone: (d) => {
+          const el = d.getElementById(self.el.id)
+          el.style['opacity'] = 1.0
+        },
       })
       const dataURL = canvas.toDataURL('image/png')
       window.open().document.write(`<img src="${dataURL}" />`)
