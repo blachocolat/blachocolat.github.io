@@ -411,7 +411,7 @@ javascript: (async () => {
 
   // inject stylesheets and scripts
   await injectStyleSheet('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css')
-  await injectStyleSheet('http://blachocolat.github.io/ptcg-chart/style.css')
+  await injectStyleSheet('https://blachocolat.github.io/ptcg-chart/style.css')
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
