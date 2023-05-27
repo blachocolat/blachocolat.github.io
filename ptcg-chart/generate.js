@@ -1,6 +1,6 @@
 javascript: (async () => {
   class ImagePieChart {
-    constructor(parentEl, chartData, onrendered) {
+    constructor(chartData) {
       this.chartData = chartData
       this.title = ''
       this.otherRatio = 0.15
@@ -11,15 +11,135 @@ javascript: (async () => {
       this.offsetY = -20
       this.holeRadius = 60
 
-      this.el = ImagePieChart.injectChart(parentEl)
+      this.el = null
+      this.chart = null
+      this.timeout = null
+    }
+
+    get chartistData() {
+      this.chartData.sort((a, b) => {
+        return b.value - a.value // order by value desc
+      })
+      const total = this.chartData
+        .map((data) => data.value)
+        .reduce((a, b) => a + b, 0)
+      let subTotal = 0
+      let minValue = 0
+  
+      for (const data of this.chartData) {
+        if (1 - this.otherRatio <= subTotal / total) {
+          minValue = data.value
+          break
+        }
+        subTotal += data.value
+      }
+  
+      const filteredData = this.chartData.filter((data) => data.value > minValue)
+      if (filteredData.length < this.chartData.length) {
+        const filteredTotal = filteredData
+          .map((data) => data.value)
+          .reduce((a, b) => a + b, 0)
+        filteredData.push({
+          label: 'その他',
+          value: total - filteredTotal,
+        })
+      }
+  
+      return {
+        labels: filteredData.map((data) => data.label),
+        series: filteredData.map((data) => data.value),
+        imageSrcs: filteredData.map((data) => data.imageSrc),
+      }
+    }
+
+    get chartistOptions() {
+      return {
+        donut: true,
+        donutSolid: true,
+        donutWidth: 175 - this.holeRadius,
+        chartPadding: 20,
+        labelOffset: 40,
+        labelDirection: 'explode',
+        showLabel: !this.hideLabel,
+        labelInterpolationFnc: (label, index) => {
+          const total = this.chartistData.series.reduce((a, b) => a + b, 0)
+          const ratio = (this.chartistData.series[index] / total) * 100
+          return typeof label == 'string'
+            ? `${label}\n${ratio.toFixed(1)}%`
+            : `${ratio.toFixed(1)}%`
+        },
+      }
+    }
+
+    static injectChart() {
+      // do nothing if elements have been already injected
+      let chartEl = document.getElementById('ct-chart')
+      if (chartEl) {
+        return chartEl
+      }
+
+      const el = document.createElement('div')
+      el.id = 'ct-canvas'
+      el.style['width'] = '720px'
+      el.style['position'] = 'absolute'
+      el.style['top'] = 0
+      el.style['opacity'] = 0.0
+
+      const containerEl = document.createElement('div')
+      containerEl.className = 'ct-container'
+  
+      chartEl = document.createElement('div')
+      chartEl.id = 'ct-chart'
+      chartEl.className = 'ct-chart'
+
+      containerEl.appendChild(chartEl)
+      el.appendChild(containerEl)
+      document.body.appendChild(el)
+
+      return el
+    }
+
+    static drawText(parentEl, text, attributes) {
+      const svgNS = 'http://www.w3.org/2000/svg'
+      const tspan = document.createElementNS(svgNS, 'tspan')
+  
+      if (attributes) {
+        Object.entries(attributes).forEach(([name, value]) => {
+          tspan.setAttribute(name == 'className' ? 'class' : name, value)
+        })
+      }
+  
+      tspan.textContent = text
+      parentEl.appendChild(tspan)
+    }
+
+    static createDataURL(url) {
+      return new Promise((resolve, reject) => {
+        const image = new Image()
+        image.crossOrigin = 'Anonymous'
+        image.onload = () => {
+          const canvas = document.createElement('canvas')
+          canvas.width = image.width
+          canvas.height = image.height
+          const context = canvas.getContext('2d')
+          context?.drawImage(image, 0, 0)
+          resolve(canvas.toDataURL('image/png'))
+        }
+        image.onerror = reject
+        image.src = url
+      })
+    }
+
+    draw(onrendered) {
+      this.el = ImagePieChart.injectChart()
       this.chart = new Chartist.Pie(
         '#ct-chart',
         this.chartistData,
         this.chartistOptions
       )
   
-      const baseWidth = 320
-      const baseHeight = 447
+      const baseWidth = 360   // 63 x 5.714
+      const baseHeight = 503  // 88 x 5.714
   
       this.chart.on(
         'draw',
@@ -66,11 +186,11 @@ javascript: (async () => {
               const height = baseHeight * scale
               const offsetX =
                 context.radius * ((minX + maxX) / 2 - (scale - 1)) +
-                200 +
+                180 +
                 this.offsetX
               const offsetY =
                 context.radius * ((minY + maxY) / 2 - ((maxY - minY) / 2 - 1)) +
-                20 +
+                18 +
                 this.offsetY
   
               const svgNS = 'http://www.w3.org/2000/svg'
@@ -152,119 +272,6 @@ javascript: (async () => {
           }, 100)
         }
       )
-    }
-
-    get chartistData() {
-      this.chartData.sort((a, b) => {
-        return b.value - a.value // order by value desc
-      })
-      const total = this.chartData
-        .map((data) => data.value)
-        .reduce((a, b) => a + b, 0)
-      let subTotal = 0
-      let minValue = 0
-  
-      for (const data of this.chartData) {
-        if (1 - this.otherRatio <= subTotal / total) {
-          minValue = data.value
-          break
-        }
-        subTotal += data.value
-      }
-  
-      const filteredData = this.chartData.filter((data) => data.value > minValue)
-      if (filteredData.length < this.chartData.length) {
-        const filteredTotal = filteredData
-          .map((data) => data.value)
-          .reduce((a, b) => a + b, 0)
-        filteredData.push({
-          label: 'その他',
-          value: total - filteredTotal,
-        })
-      }
-  
-      return {
-        labels: filteredData.map((data) => data.label),
-        series: filteredData.map((data) => data.value),
-        imageSrcs: filteredData.map((data) => data.imageSrc),
-      }
-    }
-
-    get chartistOptions() {
-      return {
-        donut: true,
-        donutSolid: true,
-        donutWidth: 160 - this.holeRadius,
-        chartPadding: 20,
-        labelOffset: 30,
-        labelDirection: 'explode',
-        showLabel: !this.hideLabel,
-        labelInterpolationFnc: (label, index) => {
-          const total = this.chartistData.series.reduce((a, b) => a + b, 0)
-          const ratio = (this.chartistData.series[index] / total) * 100
-          return typeof label == 'string'
-            ? `${label}\n${ratio.toFixed(1)}%`
-            : `${ratio.toFixed(1)}%`
-        },
-      }
-    }
-
-    static injectChart(parentEl) {
-      // do nothing if elements have been already injected
-      let chartEl = document.getElementById('ct-chart')
-      if (chartEl) {
-        return chartEl
-      }
-
-      const el = document.createElement('div')
-      el.id = 'ct-canvas'
-      el.style['width'] = '720px'
-      el.style['position'] = 'absolute'
-      el.style['opacity'] = 0.0
-
-      const containerEl = document.createElement('div')
-      containerEl.className = 'ct-container'
-  
-      chartEl = document.createElement('div')
-      chartEl.id = 'ct-chart'
-      chartEl.className = 'ct-chart'
-
-      containerEl.appendChild(chartEl)
-      el.appendChild(containerEl)
-      parentEl.appendChild(el)
-
-      return el
-    }
-
-    static drawText(parentEl, text, attributes) {
-      const svgNS = 'http://www.w3.org/2000/svg'
-      const tspan = document.createElementNS(svgNS, 'tspan')
-  
-      if (attributes) {
-        Object.entries(attributes).forEach(([name, value]) => {
-          tspan.setAttribute(name == 'className' ? 'class' : name, value)
-        })
-      }
-  
-      tspan.textContent = text
-      parentEl.appendChild(tspan)
-    }
-
-    static createDataURL(url) {
-      return new Promise((resolve, reject) => {
-        const image = new Image()
-        image.crossOrigin = 'Anonymous'
-        image.onload = () => {
-          const canvas = document.createElement('canvas')
-          canvas.width = image.width
-          canvas.height = image.height
-          const context = canvas.getContext('2d')
-          context?.drawImage(image, 0, 0)
-          resolve(canvas.toDataURL('image/png'))
-        }
-        image.onerror = reject
-        image.src = url
-      })
     }
   }
 
@@ -402,12 +409,12 @@ javascript: (async () => {
     })
   }
 
+  // inject stylesheets and scripts
   await injectStyleSheet('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css')
-  await injectStyleSheet('https://blachocolat.github.io/ptcg-chart/style.css')
+  await injectStyleSheet('http://blachocolat.github.io/ptcg-chart/style.css')
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
-  const parentEl = document.querySelector('#inputArea')
   const promises = fetchCards().map(async (data) => {
     return {
       label: data.name,
@@ -416,17 +423,18 @@ javascript: (async () => {
     }
   })
   const chartData = await Promise.all(promises)
-  const ipc = new ImagePieChart(parentEl, chartData, async (self) => {
-      // open image in a new tab
-      const canvas = await html2canvas(self.el, {
-        scale: 16 / 9,
-        backgroundColor: !self.transparentBackground ? '#ffffff' : null,
-        onclone: (d) => {
-          const el = d.getElementById(self.el.id)
-          el.style['opacity'] = 1.0
-        },
-      })
-      const dataURL = canvas.toDataURL('image/png')
-      window.open().document.write(`<img src="${dataURL}" />`)
-  })
+  const ipc = new ImagePieChart(chartData)
+  ipc.draw(async (self) => {
+    // open image in a new tab
+    const canvas = await html2canvas(self.el, {
+      scale: 16 / 9,
+      backgroundColor: !self.transparentBackground ? '#ffffff' : null,
+      onclone: (d) => {
+        const el = d.getElementById(self.el.id)
+        el.style['opacity'] = 1.0
+      },
+    })
+    const dataURL = canvas.toDataURL('image/png')
+    window.open().document.write(`<img src="${dataURL}" />`)
+})
 })()
