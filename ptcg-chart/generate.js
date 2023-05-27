@@ -1,6 +1,6 @@
 javascript: (async () => {
   class ImagePieChart {
-    constructor(parentEl, chartData) {
+    constructor(parentEl, chartData, onrendered) {
       this.chartData = chartData
       this.title = ''
       this.otherRatio = 0.15
@@ -145,6 +145,11 @@ javascript: (async () => {
               firstChild.removeAttribute('dy')
             }
           }
+
+          clearTimeout(this.timeout)
+          this.timeout = setTimeout(() => {
+            if (onrendered) { onrendered(this) }
+          }, 100)
         }
       )
     }
@@ -204,30 +209,6 @@ javascript: (async () => {
       }
     }
 
-    async captureAsPNG() {
-      // redraw with dataURL images
-      const promises = this.chartistData.imageSrcs.map((url) => {
-        return url ? ImagePieChart.createDataURL(url) : url
-      })
-      const dataURLs = await Promise.all(promises)
-      const chartistData = Object.assign(this.chartistData, {
-        imageSrcs: dataURLs,
-      })
-      this.chart.update(chartistData, this.chartistOptions)
-
-      // save as PNG
-      const canvas = await html2canvas(this.el, {
-        scale: 16 / 9,
-        backgroundColor: !this.transparentBackground ? '#ffffff' : null
-      })
-
-      const a = document.createElement('a')
-      a.href = canvas.toDataURL('image/png')
-      a.download = `デッキ分布図.png`
-      a.click()
-      a.remove()
-    }
-
     static injectChart(parentEl) {
       // do nothing if elements have been already injected
       let chartEl = document.querySelector('#ct-chart')
@@ -269,6 +250,7 @@ javascript: (async () => {
     static createDataURL(url) {
       return new Promise((resolve, reject) => {
         const image = new Image()
+        image.crossOrigin = 'Anonymous'
         image.onload = () => {
           const canvas = document.createElement('canvas')
           canvas.width = image.width
@@ -422,16 +404,22 @@ javascript: (async () => {
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
-  alert('hoge')
-
   const parentEl = document.querySelector('#inputArea')
-  const chartData = fetchCards().map((data) => {
+  const promises = fetchCards().map(async (data) => {
     return {
       label: data.name,
       value: data.count,
-      imageSrc: data.imageSrc,
+      imageSrc: data.imageSrc ? await ImagePieChart.createDataURL(data.imageSrc) : new Promise(),
     }
   })
-  const ipc = new ImagePieChart(parentEl, chartData)
-  await ipc.captureAsPNG()
+  const chartData = await Promise.all(promises)
+  const ipc = new ImagePieChart(parentEl, chartData, async (self) => {
+      // open image in a new tab
+      const canvas = await html2canvas(self.el, {
+        scale: 16 / 9,
+        backgroundColor: !self.transparentBackground ? '#ffffff' : null,
+      })
+      const dataURL = canvas.toDataURL('image/png')
+      window.open().document.write(`<img src="${dataURL}" />`)
+  })
 })()
