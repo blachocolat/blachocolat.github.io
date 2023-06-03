@@ -13,7 +13,6 @@ javascript: (async () => {
 
       this.el = null
       this.chart = null
-      this.timeout = null
     }
 
     get chartistData() {
@@ -220,6 +219,11 @@ javascript: (async () => {
             } else {
               context.element._node.setAttribute('style', 'fill: #9E9E9E')
             }
+
+            // fire the callback when all images have been loaded
+            if (context.endAngle == 360 && onrendered) {
+              onrendered(this)
+            }
           } else if (context.type == 'label') {
             const lines = context.text.split('\n')
   
@@ -265,11 +269,6 @@ javascript: (async () => {
               firstChild.removeAttribute('dy')
             }
           }
-
-          clearTimeout(this.timeout)
-          this.timeout = setTimeout(() => {
-            if (onrendered) { onrendered(this) }
-          }, 100)
         }
       )
     }
