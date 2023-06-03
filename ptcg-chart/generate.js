@@ -92,9 +92,9 @@ javascript: (async () => {
       chartEl.id = 'ct-chart'
       chartEl.className = 'ct-chart'
 
-      containerEl.appendChild(chartEl)
-      el.appendChild(containerEl)
-      document.body.appendChild(el)
+      containerEl.append(chartEl)
+      el.append(containerEl)
+      document.body.append(el)
 
       return el
     }
@@ -110,7 +110,7 @@ javascript: (async () => {
       }
   
       tspan.textContent = text
-      parentEl.appendChild(tspan)
+      parentEl.append(tspan)
     }
 
     static createDataURL(url) {
@@ -209,9 +209,9 @@ javascript: (async () => {
               image.setAttribute('width', `${width}`)
               image.setAttribute('height', `${height}`)
   
-              pattern.appendChild(image)
-              defs.appendChild(pattern)
-              this.chart.svg._node.appendChild(defs)
+              pattern.append(image)
+              defs.append(pattern)
+              this.chart.svg._node.append(defs)
   
               context.element._node.setAttribute(
                 'style',
@@ -275,8 +275,21 @@ javascript: (async () => {
     }
   }
 
-  const injectElement = () => {
-    globalCardNames = {}//JSON.parse('${JSON.stringify(options.cardNames)}')
+  const injectElementCode = (onsubmit) => {
+    const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
+
+    // inject custom button elements
+    const parentEl = document.querySelector('#inputArea > div.MainArea.MainArea-large > div > section > div:last-child')
+    const buttonEl = document.createElement('a')
+    buttonEl.className = 'Button Button-texture noLinkBtn'
+    buttonEl.onclick = onsubmit
+    const spanEl = document.createElement('span')
+    spanEl.className = 'bebel'
+    spanEl.textContent = 'デッキ分布図をつくる'
+    buttonEl.append(spanEl)
+    parentEl.append(buttonEl)
+
+    // inject custom input elements
     Array.from(document.querySelectorAll('#cardImagesView > div > div > table > tbody'))
       .forEach((el) => {
         // do nothing if elements have been already injected
@@ -286,8 +299,8 @@ javascript: (async () => {
         const imageEl = el.querySelector('tr.imgBlockArea > td > a > img')
         const cardId = parseInt(imageEl.id.replace(/^img_([0-9]+)$/, '$1'), 10)
         const originCardName = imageEl.alt.replace(/&amp;/g, '&')
-        imageEl.alt = globalCardNames.hasOwnProperty(cardId)
-          ? globalCardNames[cardId]
+        imageEl.alt = cardNames.hasOwnProperty(cardId)
+          ? cardNames[cardId]
           : originCardName
         {
           const countEl = el.querySelector('tr > td.cPos.nowrap > *')
@@ -331,8 +344,8 @@ javascript: (async () => {
         tdEl.setAttribute('colspan', 2)
         const inputEl = document.createElement('input')
         inputEl.type = 'text'
-        inputEl.value = globalCardNames.hasOwnProperty(cardId)
-          ? globalCardNames[cardId]
+        inputEl.value = cardNames.hasOwnProperty(cardId)
+          ? cardNames[cardId]
           : originCardName
         inputEl.placeholder = originCardName
         inputEl.style['width'] = '100%'
@@ -357,16 +370,14 @@ javascript: (async () => {
         el.append(trEl)
       })
 
-      if (typeof globalScriptEl === 'undefined') {
-        // update global variable
-        globalScriptEl = document.createElement('script')
-        globalScriptEl.append(`
-          PCGDECK.cardCntChange=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){j[1]=parseInt(j[1],10)+k;if(j[1]<=0){j[1]=0}g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.cardTableViewCall(1)}return false};
-          PCGDECK.cardCntSet=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){m=parseInt(j[1],10);j[1]=k;if(j[1]<=0){j[1]=0}PCGDECK.cardViewCnt+=j[1]-m;g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.setCookieCall(f)}return false};
-        `)
-        document.body.append(globalScriptEl)
-        globalScriptEl.remove()
-      }
+      // update global variable
+      const scriptEl = document.createElement('script')
+      scriptEl.append(`
+        PCGDECK.cardCntChange=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){j[1]=parseInt(j[1],10)+k;if(j[1]<=0){j[1]=0}g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.cardTableViewCall(1)}return false};
+        PCGDECK.cardCntSet=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){m=parseInt(j[1],10);j[1]=k;if(j[1]<=0){j[1]=0}PCGDECK.cardViewCnt+=j[1]-m;g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.setCookieCall(f)}return false};
+      `)
+      document.body.append(scriptEl)
+      scriptEl.remove()
   }
 
   const fetchCards = () => {
@@ -394,7 +405,7 @@ javascript: (async () => {
         resolve()
       }
       el.href = href
-      document.head.appendChild(el)
+      document.head.append(el)
     })
   }
 
@@ -405,7 +416,7 @@ javascript: (async () => {
         resolve()
       }
       el.src = src
-      document.head.appendChild(el)
+      document.head.append(el)
     })
   }
 
@@ -415,26 +426,38 @@ javascript: (async () => {
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
-  const promises = fetchCards().map(async (data) => {
-    return {
-      label: data.name,
-      value: data.count,
-      imageSrc: data.imageSrc ? await ImagePieChart.createDataURL(data.imageSrc) : new Promise(),
-    }
-  })
-  const chartData = await Promise.all(promises)
-  const ipc = new ImagePieChart(chartData)
-  ipc.draw(async (self) => {
-    // open image in a new tab
-    const canvas = await html2canvas(self.el, {
-      scale: 16 / 9,
-      backgroundColor: !self.transparentBackground ? '#ffffff' : null,
-      onclone: (d) => {
-        const el = d.getElementById(self.el.id)
-        el.style['opacity'] = 1.0
-      },
+  injectElementCode(async () => {
+    const cards = fetchCards()
+
+    // save card names into the storage
+    const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
+    cards.forEach((card) => {
+      cardNames[card.id] = card.name
     })
-    const dataURL = canvas.toDataURL('image/png')
-    window.open().document.write(`<img src="${dataURL}" />`)
-})
+    window.localStorage.setItem('PTCGChart::cardNames', JSON.stringify(cardNames))
+
+    // draw with dataURL images
+    const promises = cards.map(async (card) => {
+      return {
+        label: card.name,
+        value: card.count,
+        imageSrc: card.imageSrc ? await ImagePieChart.createDataURL(card.imageSrc) : new Promise(),
+      }
+    })
+    const chartData = await Promise.all(promises)
+    const ipc = new ImagePieChart(chartData)
+    ipc.draw(async (self) => {
+      // open image in a new tab
+      const canvas = await html2canvas(self.el, {
+        scale: 16 / 9,
+        backgroundColor: !self.transparentBackground ? '#ffffff' : null,
+        onclone: (d) => {
+          const el = d.getElementById(self.el.id)
+          el.style['opacity'] = 1.0
+        },
+      })
+      const dataURL = canvas.toDataURL('image/png')
+      window.open().document.write(`<img src="${dataURL}" />`)
+    })
+  })
 })()
