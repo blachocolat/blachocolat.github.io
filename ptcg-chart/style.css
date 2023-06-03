@@ -85,4 +85,23 @@
   font-size: 10.5px;
   color: inherit;
   vertical-align: inherit;
+}
+
+.Button.loading:after {
+  font-family: pokemoncard-font;
+  content: "\f806";
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }/*# sourceMappingURL=style.css.map */
