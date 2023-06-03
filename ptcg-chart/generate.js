@@ -131,7 +131,7 @@ javascript: (async () => {
       })
     }
 
-    draw(onrendered) {
+    draw(onRender) {
       this.el = ImagePieChart.injectChart()
       this.chart = new Chartist.Pie(
         '#ct-chart',
@@ -279,46 +279,51 @@ javascript: (async () => {
 
           // fire the callback when all images have been loaded
           if (this.slicesRendered && this.labelsRendered) {
-            if (onrendered) { onrendered(this) }
+            if (onRender) { onRender(this) }
           }
         }
       )
     }
   }
 
-  const injectElementCode = (onsubmit) => {
-    const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
-
+  const injectButtonElements = (onPress) => {
     // inject custom button elements
     const parentEl = document.querySelector('div.MainArea > div.ContentsArea > section')
 
-    if (!parentEl.querySelector('#ct-layout')) {
-      const layoutEl = document.createElement('div')
-      layoutEl.id = 'ct-layout'
-      layoutEl.className = 'Layout'
-  
-      const headEl = document.createElement('h2')
-      headEl.className = 'Heading2'
-      headEl.textContent = 'デッキ分布図つくるマシーン'
-  
-      const buttonEl = document.createElement('a')
-      buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
-        ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
-        : 'Button Button-texture noLinkBtn'
-      buttonEl.onclick = () => {
-        if (onsubmit) { onsubmit(buttonEl) }
-      }
-  
-      const spanEl = document.createElement('span')
-      spanEl.className = 'bebel'
-      spanEl.textContent = 'デッキ分布図をつくる'
-  
-      buttonEl.append(spanEl)
-      layoutEl.append(headEl, buttonEl)
-      parentEl.append(layoutEl)
+    // do nothing if elements have been already injected
+    if (parentEl.querySelector('#ct-layout')) {
+      return
     }
 
+    const layoutEl = document.createElement('div')
+    layoutEl.id = 'ct-layout'
+    layoutEl.className = 'Layout'
+
+    const headEl = document.createElement('h2')
+    headEl.className = 'Heading2'
+    headEl.textContent = 'デッキ分布図つくるマシーン'
+
+    const buttonEl = document.createElement('a')
+    buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
+      ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
+      : 'Button Button-texture noLinkBtn'
+    buttonEl.onclick = () => {
+      if (onPress) { onPress(buttonEl) }
+    }
+
+    const spanEl = document.createElement('span')
+    spanEl.className = 'bebel'
+    spanEl.textContent = 'デッキ分布図をつくる'
+
+    buttonEl.append(spanEl)
+    layoutEl.append(headEl, buttonEl)
+    parentEl.append(layoutEl)
+  }
+
+  const injectInputElements = () => {
     // inject custom input elements
+    const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
+
     Array.from(document.querySelectorAll('#cardImagesView > div > div > table > tbody'))
       .forEach((el) => {
         // do nothing if elements have been already injected
@@ -403,13 +408,32 @@ javascript: (async () => {
       })
 
       // update global variable
-      const scriptEl = document.createElement('script')
-      scriptEl.append(`
-        PCGDECK.cardCntChange=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){j[1]=parseInt(j[1],10)+k;if(j[1]<=0){j[1]=0}g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.cardTableViewCall(1)}return false};
-        PCGDECK.cardCntSet=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){m=parseInt(j[1],10);j[1]=k;if(j[1]<=0){j[1]=0}PCGDECK.cardViewCnt+=j[1]-m;g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.setCookieCall(f)}return false};
-      `)
-      document.body.append(scriptEl)
-      scriptEl.remove()
+      if (typeof globalScriptEl === 'undefined') {
+        globalScriptEl = document.createElement('script')
+        globalScriptEl.append(`
+          PCGDECK.cardCntChange=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){j[1]=parseInt(j[1],10)+k;if(j[1]<=0){j[1]=0}g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.cardTableViewCall(1)}return false};
+          PCGDECK.cardCntSet=function(f,e,k){var l=$("#"+f).val();if(l!=""){var h=l.split("-");var i=h.length;var g=[];for(ii=0;ii<i;ii++){var j=h[ii].split("_");if(j[0]==e){m=parseInt(j[1],10);j[1]=k;if(j[1]<=0){j[1]=0}PCGDECK.cardViewCnt+=j[1]-m;g.push(j.join("_"));PCGDECK.errorItemClear(j[0])}else{g.push(h[ii])}}$("#"+f).val(g.join("-"));PCGDECK.setCookieCall(f)}return false};
+        `)
+        document.body.append(globalScriptEl)
+        globalScriptEl.remove()
+      }
+  }
+
+  const injectObserver = (selector, onUpdate) => {
+    // inject elements
+    if (onUpdate) { onUpdate() }
+
+    // reinject elements when the observed elements are updated
+    if (typeof globalObserver === 'undefined') {
+      // global define
+      globalObserver = new MutationObserver(async (_) => {
+        if (onUpdate) { onUpdate() }
+      })
+      globalObserver.observe(
+        document.querySelector(selector),
+        { childList: true }
+      )
+    }
   }
 
   const fetchCards = () => {
@@ -458,7 +482,7 @@ javascript: (async () => {
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
-  injectElementCode(async (el) => {
+  injectButtonElements(async (el) => {
     el.classList.add('disabled')
     el.classList.add('loading')
 
@@ -498,4 +522,5 @@ javascript: (async () => {
       el.classList.remove('loading')
     })
   })
+  injectObserver('#cardImagesView', injectInputElements)
 })()
