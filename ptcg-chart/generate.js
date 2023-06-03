@@ -3,7 +3,7 @@ javascript: (async () => {
     constructor(chartData) {
       this.chartData = chartData || []
       this.title = LocalStorage.getString('title', '')
-      this.otherRatio = 0.15
+      this.otherRatio = LocalStorage.getFloat('otherRatio', 0.15)
       this.hideLabel = LocalStorage.getBoolean('hideLabel', false)
       this.transparentBackground = LocalStorage.getBoolean('transparentBackground', false)
       this.scale = 1.25
@@ -233,10 +233,10 @@ javascript: (async () => {
       el.style['position'] = 'absolute'
       el.style['top'] = 0
       el.style['opacity'] = 0.0
-
+      
       const containerEl = document.createElement('div')
       containerEl.className = 'ct-container'
-  
+      
       chartEl = document.createElement('div')
       chartEl.id = 'ct-chart'
       chartEl.className = 'ct-chart'
@@ -260,6 +260,53 @@ javascript: (async () => {
   
       tspan.textContent = text
       parentEl.append(tspan)
+    }
+
+    static _createTextInputElement(placeholder, defaultValue, onChange) {
+      const el = document.createElement('label')
+      el.className = 'KSTextInput'
+
+      const inputEl = document.createElement('input')
+      inputEl.type = 'text'
+      inputEl.value = defaultValue
+      inputEl.placeholder = placeholder
+      inputEl.className = 'KSTextInput_text'
+      inputEl.oninput = () => {
+        if (onChange) { onChange(inputEl) }
+      }
+
+      el.append(inputEl)
+      return el
+    }
+
+    static _createSelectElement(options, defaultValue, onChange) {
+      const el = document.createElement('label')
+      el.className = 'KSSelect'
+
+      const divEl = document.createElement('div')
+      divEl.className = 'KSSelect_inner'
+
+      const selectEl = document.createElement('select')
+      selectEl.title = 'その他の割合'
+      selectEl.className = 'KSSelect_text'
+      selectEl.style['border-radius'] = '7px'
+      selectEl.onchange = () => {
+        if (onChange) { onChange(selectEl) }
+      }
+
+      options.forEach((option) => {
+        const optionEl = document.createElement('option')
+        optionEl.value = option.value
+        optionEl.textContent = option.label
+        if (optionEl.value == defaultValue) {
+          optionEl.selected = 'selected'
+        }
+        selectEl.append(optionEl)
+      })
+
+      divEl.append(selectEl)
+      el.append(divEl)
+      return el
     }
 
     static _createCheckBoxElement(label, defaultValue, onChange) {
@@ -296,24 +343,33 @@ javascript: (async () => {
       layoutEl = document.createElement('div')
       layoutEl.id = 'ct-layout'
       layoutEl.className = 'Layout'
-  
+
       const headEl = document.createElement('h2')
       headEl.className = 'Heading2 btM10'
       headEl.textContent = 'デッキ分布図つくるマシーン'
 
-      const inputEl = document.createElement('input')
-      inputEl.type = 'text'
-      inputEl.value = this.title
-      inputEl.style['width'] = '100%'
-      inputEl.style['padding'] = '3px 6px'
-      inputEl.style['box-sizing'] = 'border-box'
-      inputEl.style['border'] = 'solid 2px #ddd'
-      inputEl.style['background-color'] = '#fff'
-      inputEl.style['border-radius'] = '4px'
-      inputEl.oninput = () => {
-        this.title = inputEl.value
-      }
-  
+      const inputEl = ImagePieChart._createTextInputElement(
+        '大会名など',
+        this.title,
+        (el) => {
+          this.title = el.value
+        })
+      const selectEl = ImagePieChart._createSelectElement(
+        [
+          { label: '0%', value: 0.00 },
+          { label: '5%', value: 0.05 },
+          { label: '10%', value: 0.10 },
+          { label: '15%', value: 0.15 },
+          { label: '20%', value: 0.20 },
+          { label: '25%', value: 0.25 },
+          { label: '30%', value: 0.30 },
+          { label: '35%', value: 0.35 },
+          { label: '40%', value: 0.40 },
+        ],
+        this.otherRatio,
+        (el) => {
+          this.otherRatio = el.value
+        })
       const checkLabelEl = ImagePieChart._createCheckBoxElement(
         'ラベルを隠す',
         this.hideLabel,
@@ -340,7 +396,7 @@ javascript: (async () => {
       spanEl.textContent = 'デッキ分布図をつくる'
       buttonEl.append(spanEl)
   
-      layoutEl.append(headEl, inputEl, checkLabelEl, checkBackgroundEl, buttonEl)
+      layoutEl.append(headEl, inputEl, selectEl, checkLabelEl, checkBackgroundEl, buttonEl)
       parentEl.append(layoutEl)
       return layoutEl
     }
@@ -467,6 +523,7 @@ javascript: (async () => {
 
       // save current settings
       LocalStorage.setItem('title', this.title)
+      LocalStorage.setItem('otherRatio', this.otherRatio)
       LocalStorage.setItem('hideLabel', this.hideLabel)
       LocalStorage.setItem('transparentBackground', this.transparentBackground)
   
@@ -523,6 +580,11 @@ javascript: (async () => {
     static getInt(key, defaultValue) {
       const value = LocalStorage.getItem(key)
       return value != null ? parseInt(value) : (defaultValue || 0)
+    }
+
+    static getFloat(key, defaultValue) {
+      const value = LocalStorage.getItem(key)
+      return value != null ? parseFloat(value) : (defaultValue || 0.0)
     }
 
     static getString(key, defaultValue) {
