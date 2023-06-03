@@ -2,10 +2,10 @@ javascript: (async () => {
   class ImagePieChart {
     constructor(chartData) {
       this.chartData = chartData || []
-      this.title = ''
+      this.title = LocalStorage.getString('title', '')
       this.otherRatio = 0.15
-      this.hideLabel = false
-      this.transparentBackground = false
+      this.hideLabel = LocalStorage.getBoolean('hideLabel', false)
+      this.transparentBackground = LocalStorage.getBoolean('transparentBackground', false)
       this.scale = 1.25
       this.offsetX = 0
       this.offsetY = -20
@@ -262,16 +262,17 @@ javascript: (async () => {
       parentEl.append(tspan)
     }
 
-    static _createCheckBoxElement(label, onChange) {
+    static _createCheckBoxElement(label, defaultValue, onChange) {
       const el = document.createElement('label')
       el.className = 'KSCheckBox'
-      el.onchange = (e) => {
-        if (onChange) { onChange(e.target) }
-      }
   
       const inputEl = document.createElement('input')
       inputEl.type = 'checkbox'
       inputEl.className = 'KSCheckBoxInput'
+      inputEl.checked = defaultValue
+      inputEl.onchange = () => {
+        if (onChange) { onChange(inputEl) }
+      }
   
       const spanEl = document.createElement('span')
       spanEl.className = 'KSCheck'
@@ -297,15 +298,35 @@ javascript: (async () => {
       layoutEl.className = 'Layout'
   
       const headEl = document.createElement('h2')
-      headEl.className = 'Heading2 btMClear'
+      headEl.className = 'Heading2 btM10'
       headEl.textContent = 'デッキ分布図つくるマシーン'
+
+      const inputEl = document.createElement('input')
+      inputEl.type = 'text'
+      inputEl.value = this.title
+      inputEl.style['width'] = '100%'
+      inputEl.style['padding'] = '3px 6px'
+      inputEl.style['box-sizing'] = 'border-box'
+      inputEl.style['border'] = 'solid 2px #ddd'
+      inputEl.style['background-color'] = '#fff'
+      inputEl.style['border-radius'] = '4px'
+      inputEl.oninput = () => {
+        this.title = inputEl.value
+      }
   
-      const checkLabelEl = ImagePieChart._createCheckBoxElement('ラベルを隠す', (el) => {
-        this.hideLabel = el.checked
-      })
-      const checkBackgroundEl = ImagePieChart._createCheckBoxElement('背景を透過する', (el) => {
-        this.transparentBackground = el.checked
-      })
+      const checkLabelEl = ImagePieChart._createCheckBoxElement(
+        'ラベルを隠す',
+        this.hideLabel,
+        (el) => {
+          this.hideLabel = el.checked
+        })
+
+      const checkBackgroundEl = ImagePieChart._createCheckBoxElement(
+        '背景を透過する',
+        this.transparentBackground,
+        (el) => {
+          this.transparentBackground = el.checked
+        })
   
       const buttonEl = document.createElement('a')
       buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
@@ -319,19 +340,19 @@ javascript: (async () => {
       spanEl.textContent = 'デッキ分布図をつくる'
       buttonEl.append(spanEl)
   
-      layoutEl.append(headEl, checkLabelEl, checkBackgroundEl, buttonEl)
+      layoutEl.append(headEl, inputEl, checkLabelEl, checkBackgroundEl, buttonEl)
       parentEl.append(layoutEl)
       return layoutEl
     }
   
     static _injectInputElements() {
       // inject custom input elements
-      const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
+      const cardNames = LocalStorage.getObject('cardNames', {})
   
       Array.from(document.querySelectorAll('#cardImagesView > div > div > table > tbody'))
         .forEach((el) => {
           // do nothing if elements have been already injected
-          if (el.querySelector('tr:last-child > td > input[type=text]')) {
+          if (el.querySelector('tr:last-child > td > input[type="text"]')) {
             return
           }
           const imageEl = el.querySelector('tr.imgBlockArea > td > a > img')
@@ -443,15 +464,20 @@ javascript: (async () => {
     async onPress(el) {
       el.classList.add('disabled')
       el.classList.add('loading')
+
+      // save current settings
+      LocalStorage.setItem('title', this.title)
+      LocalStorage.setItem('hideLabel', this.hideLabel)
+      LocalStorage.setItem('transparentBackground', this.transparentBackground)
   
       const cards = fetchCards()
   
       // save card names into the storage
-      const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
+      const cardNames = LocalStorage.getObject('cardNames', {})
       cards.forEach((card) => {
         cardNames[card.id] = card.name
       })
-      window.localStorage.setItem('PTCGChart::cardNames', JSON.stringify(cardNames))
+      LocalStorage.setItem('cardNames', JSON.stringify(cardNames))
   
       // draw with dataURL images
       const promises = cards.map(async (card) => {
@@ -462,8 +488,8 @@ javascript: (async () => {
         }
       })
       const chartData = await Promise.all(promises)
-      this.draw(chartData, () => {
-        this.openAsPNG()
+      this.draw(chartData, async () => {
+        await this.openAsPNG()
         el.classList.remove('disabled')
         el.classList.remove('loading')
       })
@@ -481,6 +507,38 @@ javascript: (async () => {
       })
       const dataURL = canvas.toDataURL('image/png')
       window.open().document.write(`<img src="${dataURL}" />`)
+    }
+  }
+
+  class LocalStorage {
+    static getItem(key) {
+      return window.localStorage.getItem(`PTCGChart::${key}`)
+    }
+
+    static getBoolean(key, defaultValue) {
+      const value = LocalStorage.getItem(key)
+      return value != null ? value === 'true' : (defaultValue || false)
+    }
+
+    static getInt(key, defaultValue) {
+      const value = LocalStorage.getItem(key)
+      return value != null ? parseInt(value) : (defaultValue || 0)
+    }
+
+    static getString(key, defaultValue) {
+      const value = LocalStorage.getItem(key)
+      return value != null ? value : (defaultValue || '')
+    }
+
+    static getObject(key, defaultValue) {
+      const value = LocalStorage.getItem(key)
+      return value != null ? JSON.parse(value) : (defaultValue || {})
+    }
+
+    static setItem(key, value) {
+      if (value != null) {
+        window.localStorage.setItem(`PTCGChart::${key}`, value)
+      }
     }
   }
 
