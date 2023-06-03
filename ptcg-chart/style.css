@@ -87,14 +87,18 @@
   vertical-align: inherit;
 }
 
+.Button.loading {
+  position: relative;
+}
 .Button.loading:after {
   font-family: pokemoncard-font;
   content: "\f806";
   display: block;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  animation: spin 2s linear infinite;
+  top: calc(50% - 8px);
+  right: calc(50% - 8px);
+  transform: translateY(-50%);
+  animation: spin 1.5s linear infinite;
 }
 
 @keyframes spin {
