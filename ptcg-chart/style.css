@@ -92,6 +92,7 @@
 }
 .Button.loading:after {
   font-family: pokemoncard-font;
+  color: #9e9e9e;
   content: "\f806";
   display: block;
   position: absolute;

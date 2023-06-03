@@ -13,6 +13,8 @@ javascript: (async () => {
 
       this.el = null
       this.chart = null
+      this.slicesRendered = false
+      this.labelsRendered = this.hideLabel
     }
 
     get chartistData() {
@@ -136,6 +138,8 @@ javascript: (async () => {
         this.chartistData,
         this.chartistOptions
       )
+      this.slicesRendered = false
+      this.labelsRendered = this.hideLabel
   
       const baseWidth = 360   // 63 x 5.714
       const baseHeight = 503  // 88 x 5.714
@@ -217,12 +221,11 @@ javascript: (async () => {
                 `fill: url(#${imageId})`
               )
             } else {
-              context.element._node.setAttribute('style', 'fill: #9E9E9E')
+              context.element._node.setAttribute('style', 'fill: #bdbdbd')
             }
 
-            // fire the callback when all images have been loaded
-            if (context.endAngle == 360 && onrendered) {
-              onrendered(this)
+            if (context.index == this.chartistData.imageSrcs.length - 1) {
+              this.slicesRendered = true
             }
           } else if (context.type == 'label') {
             const lines = context.text.split('\n')
@@ -268,6 +271,15 @@ javascript: (async () => {
               firstChild.removeAttribute('x')
               firstChild.removeAttribute('dy')
             }
+
+            if (context.index == this.chartistData.labels.length - 1) {
+              this.labelsRendered = true
+            }
+          }
+
+          // fire the callback when all images have been loaded
+          if (this.slicesRendered && this.labelsRendered) {
+            if (onrendered) { onrendered(this) }
           }
         }
       )
@@ -278,15 +290,33 @@ javascript: (async () => {
     const cardNames = JSON.parse(window.localStorage.getItem('PTCGChart::cardNames') || '{}')
 
     // inject custom button elements
-    const parentEl = document.querySelector('#inputArea > div.MainArea.MainArea-large > div > section > div:last-child')
-    const buttonEl = document.createElement('a')
-    buttonEl.className = 'Button Button-texture noLinkBtn'
-    buttonEl.onclick = onsubmit
-    const spanEl = document.createElement('span')
-    spanEl.className = 'bebel'
-    spanEl.textContent = 'デッキ分布図をつくる'
-    buttonEl.append(spanEl)
-    parentEl.append(buttonEl)
+    const parentEl = document.querySelector('div.MainArea > div.ContentsArea > section')
+
+    if (!parentEl.querySelector('#ct-layout')) {
+      const layoutEl = document.createElement('div')
+      layoutEl.id = 'ct-layout'
+      layoutEl.className = 'Layout'
+  
+      const headEl = document.createElement('h2')
+      headEl.className = 'Heading2'
+      headEl.textContent = 'デッキ分布図つくるマシーン'
+  
+      const buttonEl = document.createElement('a')
+      buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
+        ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
+        : 'Button Button-texture noLinkBtn'
+      buttonEl.onclick = () => {
+        if (onsubmit) { onsubmit(buttonEl) }
+      }
+  
+      const spanEl = document.createElement('span')
+      spanEl.className = 'bebel'
+      spanEl.textContent = 'デッキ分布図をつくる'
+  
+      buttonEl.append(spanEl)
+      layoutEl.append(headEl, buttonEl)
+      parentEl.append(layoutEl)
+    }
 
     // inject custom input elements
     Array.from(document.querySelectorAll('#cardImagesView > div > div > table > tbody'))
@@ -303,6 +333,9 @@ javascript: (async () => {
           : originCardName
         {
           const countEl = el.querySelector('tr > td.cPos.nowrap > *')
+          countEl.style['marginTop'] = 0
+          countEl.style['marginBottom'] = 0
+
           if (countEl?.querySelector('span')) {
             const inputEl = document.createElement('input')
             inputEl.type = 'text'
@@ -425,7 +458,10 @@ javascript: (async () => {
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
-  injectElementCode(async () => {
+  injectElementCode(async (el) => {
+    el.classList.add('disabled')
+    el.classList.add('loading')
+
     const cards = fetchCards()
 
     // save card names into the storage
@@ -457,6 +493,9 @@ javascript: (async () => {
       })
       const dataURL = canvas.toDataURL('image/png')
       window.open().document.write(`<img src="${dataURL}" />`)
+
+      el.classList.remove('disabled')
+      el.classList.remove('loading')
     })
   })
 })()
