@@ -88,21 +88,11 @@ javascript: (async () => {
               pattern.setAttribute('width', `${width}`)
               pattern.setAttribute('height', `${height}`)
   
-              const image = await new Promise(async (resolve, reject) => {
-                const image = document.createElementNS(svgNS, 'image')
-                console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
-                image.setAttribute('width', `${width}`)
-                image.setAttribute('height', `${height}`)
-                image.setAttribute('href', await createDataURL(imageSrc))
-                const interval = setInterval(() => {
-                  if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
-                    return
-                  }
-                  console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
-                  clearInterval(interval)
-                  resolve(image)
-                }, 1000 / 60)
-              })
+              const image = document.createElementNS(svgNS, 'image')
+              console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
+              image.setAttribute('width', `${width}`)
+              image.setAttribute('height', `${height}`)
+              image.setAttribute('href', await createDataURL(imageSrc))
   
               pattern.appendChild(image)
               defs.appendChild(pattern)
@@ -112,6 +102,17 @@ javascript: (async () => {
                 'style',
                 `fill: url(#${imageId})`
               )
+
+              await new Promise((resolve, reject) => {
+                const interval = setInterval(() => {
+                  if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
+                    return
+                  }
+                  console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
+                  clearInterval(interval)
+                  resolve()
+                }, 1000 / 60)
+              })
             } else {
               context.element._node.setAttribute('style', 'fill: #9e9e9e')
             }
