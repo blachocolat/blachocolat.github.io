@@ -17,8 +17,8 @@ javascript: (async () => {
         this.chartistData,
         this.chartistOptions
       )
-      this.slicesRendered = false
-      this.labelsRendered = this.hideLabel
+      this.renderedSlicesCount = 0
+      this.renderedLabelsCount = 0
       this.onDraw = null
   
       const baseWidth = 360   // 63 x 5.714
@@ -104,9 +104,7 @@ javascript: (async () => {
               context.element._node.setAttribute('style', 'fill: #bdbdbd')
             }
 
-            if (context.index == this.chartistData.imageSrcs.length - 1) {
-              this.slicesRendered = true
-            }
+            this.renderedSlicesCount += 1
           } else if (context.type == 'label') {
             const lines = context.text.split('\n')
   
@@ -152,13 +150,14 @@ javascript: (async () => {
               firstChild.removeAttribute('dy')
             }
 
-            if (context.index == this.chartistData.labels.length - 1) {
-              this.labelsRendered = true
-            }
+            this.renderedLabelsCount += 1
           }
 
           // fire the callback when all images have been loaded
-          if (this.slicesRendered && this.labelsRendered) {
+          if (
+            this.renderedSlicesCount == this.chartistData.imageSrcs.length - 1 &&
+            this.renderedLabelsCount == this.chartistData.labels.length - 1
+          ) {
             if (this.onDraw) { this.onDraw() }
           }
         }
@@ -562,8 +561,8 @@ javascript: (async () => {
 
     draw(chartData, onDraw) {
       this.chartData = chartData
-      this.slicesRendered = false
-      this.labelsRendered = this.hideLabel
+      this.renderedSlicesCount = 0
+      this.renderedLabelsCount = 0
 
       // draw the title
       const titleBorderEl = document.createElement('div')
@@ -588,9 +587,6 @@ javascript: (async () => {
         titleEl.remove()
         twitterEl.remove()
         signatureEl.remove()
-        this.slicesRendered = false
-        this.labelsRendered = this.hideLabel
-        this.onDraw = null
       }
       this.chart.update(this.chartistData, this.chartistOptions)
     }
