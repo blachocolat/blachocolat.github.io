@@ -101,7 +101,7 @@ javascript: (async () => {
                 `fill: url(#${imageId})`
               )
             } else {
-              context.element._node.setAttribute('style', 'fill: #bdbdbd')
+              context.element._node.setAttribute('style', 'fill: #9e9e9e')
             }
 
             this.renderedSlicesCount += 1

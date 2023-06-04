@@ -74,7 +74,7 @@
   margin: -4.375px;
   margin-left: -2px;
   display: inline-block;
-  vertical-align: bottom;
+  vertical-align: middle;
   transform: scale(0.5625);
 }
 
@@ -91,7 +91,7 @@
   top: calc(50% - 12px);
   right: calc(50% - 12px);
   transform: translateY(-50%);
-  animation: spin 1.5s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
