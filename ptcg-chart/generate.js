@@ -154,12 +154,12 @@ javascript: (async () => {
           }
 
           // fire the callback when all images have been loaded
-          // if (
+          if (
             this.renderedSlicesCount == this.chartistData.imageSrcs.length - 1 &&
             this.renderedLabelsCount == this.chartistData.labels.length - 1
-          // ) {
+          ) {
             if (this.onDraw) { this.onDraw() }
-          // }
+          }
         }
       )
     }
