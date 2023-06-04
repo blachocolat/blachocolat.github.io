@@ -155,8 +155,8 @@ javascript: (async () => {
 
           // fire the callback when all images have been loaded
           if (
-            this.renderedSlicesCount == this.chartistData.imageSrcs.length - 1 &&
-            this.renderedLabelsCount == this.chartistData.labels.length - 1
+            this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
+            this.renderedLabelsCount == this.chartistData.labels.length
           ) {
             if (this.onDraw) { this.onDraw() }
           }
