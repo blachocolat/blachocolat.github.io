@@ -90,19 +90,16 @@ javascript: (async () => {
   
               const image = await new Promise(async (resolve, reject) => {
                 const image = document.createElementNS(svgNS, 'image')
-                image.setAttribute('href', await createDataURL(imageSrc))
-                image.setAttribute('width', `${width}`)
-                image.setAttribute('height', `${height}`)
-                console.log(`(${image.width.baseVal.value},${image.height.baseVal.value})`)
-                const observer = new ResizeObserver((_) => {
-                  console.log(`(${image.width.baseVal.value},${image.height.baseVal.value})`)
+                const interval = setInterval(() => {
                   if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
                     return
                   }
-                  observer.unobserve(image)
+                  clearInterval(interval)
                   resolve(image)
-                })
-                observer.observe(image)
+                }, 1000 / 60)
+                image.setAttribute('href', await createDataURL(imageSrc))
+                image.setAttribute('width', `${width}`)
+                image.setAttribute('height', `${height}`)
               })
   
               pattern.appendChild(image)
