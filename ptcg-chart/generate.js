@@ -613,6 +613,15 @@ javascript: (async () => {
       })
       LocalStorage.setItem('cardNames', JSON.stringify(cardNames))
   
+      // draw with dataURL images
+      // const promises = cards.map(async (card) => {
+      //   return {
+      //     label: card.name,
+      //     value: card.count,
+      //     imageSrc: card.imageSrc ? await createDataURL(card.imageSrc) : new Promise(),
+      //   }
+      // })
+      // const chartData = await Promise.all(promises)
       const chartData = cards.map((card) => {
         return {
           label: card.name,
@@ -708,12 +717,7 @@ javascript: (async () => {
         canvas.height = image.height
         const context = canvas.getContext('2d')
         context?.drawImage(image, 0, 0)
-        const dataURL = canvas.toDataURL('image/png')
-
-        const dummy = new Image()
-        dummy.onload = () => { resolve(dataURL) }
-        dummy.onerror = reject
-        dummy.src = dataURL
+        resolve(canvas.toDataURL('image/png'))
       }
       image.onerror = reject
       image.src = url
