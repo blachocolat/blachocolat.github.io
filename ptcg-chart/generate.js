@@ -154,6 +154,7 @@ javascript: (async () => {
           }
 
           // fire the callback when all images have been loaded
+          console.log(context)
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
@@ -643,7 +644,7 @@ javascript: (async () => {
       if (w) {
         w.document.write(`<img src="${dataURL}" />`)
       } else {
-        window.alert('ブラウザの設定で、ポップアップウインドウを許可してください。')
+        window.alert('ポップアップウインドウが許可されていないため、デッキ分布図を作成できませんでした。')
       }
     }
   }
