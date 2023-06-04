@@ -93,6 +93,7 @@ javascript: (async () => {
                 image.setAttribute('href', await createDataURL(imageSrc))
                 image.setAttribute('width', `${width}`)
                 image.setAttribute('height', `${height}`)
+                console.log(`(${image.width.baseVal.value},${image.height.baseVal.value})`)
                 const observer = new ResizeObserver((_) => {
                   console.log(`(${image.width.baseVal.value},${image.height.baseVal.value})`)
                   if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
