@@ -588,6 +588,9 @@ javascript: (async () => {
         titleEl.remove()
         twitterEl.remove()
         signatureEl.remove()
+        this.slicesRendered = false
+        this.labelsRendered = this.hideLabel
+        this.onDraw = null
       }
       this.chart.update(this.chartistData, this.chartistOptions)
     }
