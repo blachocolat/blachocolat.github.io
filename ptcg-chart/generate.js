@@ -90,17 +90,15 @@ javascript: (async () => {
   
               const image = await new Promise((resolve, reject) => {
                 const image = document.createElementNS(svgNS, 'image')
-                image.onload = () => {
-                  resolve(image)
-                }
+                image.onload = () => { resolve(image) }
                 image.setAttribute('href', imageSrc)
                 image.setAttribute('width', `${width}`)
                 image.setAttribute('height', `${height}`)
               })
   
-              pattern.append(image)
-              defs.append(pattern)
-              this.chart.svg._node.append(defs)
+              pattern.appendChild(image)
+              defs.appendChild(pattern)
+              this.chart.svg._node.appendChild(defs)
   
               context.element._node.setAttribute(
                 'style',
@@ -160,6 +158,7 @@ javascript: (async () => {
           }
 
           // fire the callback when all images have been loaded
+          console.log(context)
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
