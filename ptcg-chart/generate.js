@@ -161,9 +161,7 @@ javascript: (async () => {
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
-            setTimeout(async () => {
-              await this.onDraw()
-            }, 100)
+            await this.onDraw()
           }
         }
       )
