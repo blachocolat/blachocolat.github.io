@@ -26,7 +26,7 @@ javascript: (async () => {
   
       this.chart.on(
         'draw',
-        (context) => {
+        async (context) => {
           if (context.type == 'slice') {
             const imageSrc = this.chartistData.imageSrcs[context.index]
   
@@ -155,10 +155,11 @@ javascript: (async () => {
 
           // fire the callback when all images have been loaded
           if (
+            this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
-            if (this.onDraw) { this.onDraw() }
+            await this.onDraw()
           }
         }
       )
@@ -370,8 +371,8 @@ javascript: (async () => {
       buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
         ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
         : 'Button Button-texture noLinkBtn'
-      buttonEl.onclick = () => {
-        if (onPress) { onPress(buttonEl) }
+      buttonEl.onclick = async () => {
+        if (onPress) { await onPress(buttonEl) }
       }
       const spanEl = document.createElement('span')
       spanEl.className = 'bebel'
@@ -581,8 +582,8 @@ javascript: (async () => {
 
       this.canvasEl.querySelector('.ct-container').append(titleBorderEl, titleEl, signatureEl)
 
-      this.onDraw = () => {
-        if (onDraw) { onDraw() }
+      this.onDraw = async () => {
+        if (onDraw) { await onDraw() }
         titleBorderEl.remove()
         titleEl.remove()
         twitterEl.remove()
@@ -637,7 +638,13 @@ javascript: (async () => {
         },
       })
       const dataURL = canvas.toDataURL('image/png')
-      window.open().document.write(`<img src="${dataURL}" />`)
+      const w = window.open()
+
+      if (w) {
+        w.document.write(`<img src="${dataURL}" />`)
+      } else {
+        window.alert('ブラウザの設定で、ポップアップウインドウを許可してください。')
+      }
     }
   }
 
