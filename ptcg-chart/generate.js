@@ -11,7 +11,7 @@ javascript: (async () => {
       this.offsetY = -20
       this.holeRadius = 60
 
-      this.el = ImagePieChart._injectChart()
+      this.canvasEl = ImagePieChart._injectChart()
       this.chart = new Chartist.Pie(
         '#ct-chart',
         this.chartistData,
@@ -222,12 +222,12 @@ javascript: (async () => {
 
     static _injectChart() {
       // do nothing if elements have been already injected
-      let chartEl = document.querySelector('#ct-chart')
-      if (chartEl) {
-        return chartEl
+      let el = document.querySelector('#ct-canvas')
+      if (el) {
+        return el
       }
 
-      const el = document.createElement('div')
+      el = document.createElement('div')
       el.id = 'ct-canvas'
       el.style['width'] = '720px'
       el.style['position'] = 'absolute'
@@ -237,7 +237,7 @@ javascript: (async () => {
       const containerEl = document.createElement('div')
       containerEl.className = 'ct-container'
       
-      chartEl = document.createElement('div')
+      const chartEl = document.createElement('div')
       chartEl.id = 'ct-chart'
       chartEl.className = 'ct-chart'
 
@@ -342,7 +342,7 @@ javascript: (async () => {
     static _createCheckBoxElement(label, defaultValue, onChange) {
       const el = document.createElement('label')
       el.className = 'KSCheckBox'
-      el.style['margin-right'] = '0.7em'
+      el.style['margin-right'] = '0.5em'
   
       const inputEl = document.createElement('input')
       inputEl.type = 'checkbox'
@@ -562,11 +562,33 @@ javascript: (async () => {
 
     draw(chartData, onDraw) {
       this.chartData = chartData
-      this.onDraw = onDraw
-
       this.slicesRendered = false
       this.labelsRendered = this.hideLabel
 
+      // draw the title
+      const titleBorderEl = document.createElement('div')
+      titleBorderEl.className = 'ct-title ct-title--border'
+      titleBorderEl.textContent = this.title
+      const titleEl = document.createElement('div')
+      titleEl.className = 'ct-title'
+      titleEl.textContent = this.title
+
+      // draw the signature
+      const twitterEl = document.createElement('span')
+      twitterEl.className = 'ct-twitter'
+      const signatureEl = document.createElement('div')
+      signatureEl.className = 'ct-signature'
+      signatureEl.append('powered by', twitterEl, '@tilanosaur')
+
+      this.canvasEl.querySelector('.ct-container').append(titleBorderEl, titleEl, signatureEl)
+
+      this.onDraw = () => {
+        if (onDraw) { onDraw() }
+        titleBorderEl.remove()
+        titleEl.remove()
+        twitterEl.remove()
+        signatureEl.remove()
+      }
       this.chart.update(this.chartistData, this.chartistOptions)
     }
 
@@ -607,11 +629,11 @@ javascript: (async () => {
 
     async openAsPNG() {
       // open image in a new tab
-      const canvas = await html2canvas(this.el, {
+      const canvas = await html2canvas(this.canvasEl, {
         scale: 16 / 9,
         backgroundColor: !this.transparentBackground ? '#ffffff' : null,
         onclone: (d) => {
-          const el = d.getElementById(this.el.id)
+          const el = d.getElementById(this.canvasEl.id)
           el.style['opacity'] = 1.0
         },
       })
