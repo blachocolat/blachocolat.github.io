@@ -17,8 +17,9 @@ javascript: (async () => {
         this.chartistData,
         this.chartistOptions
       )
+
       this.renderedSlicesCount = 0
-      this.renderedLabelsCount = 0
+      this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       this.onDraw = null
   
       const baseWidth = 360   // 63 x 5.714
@@ -87,10 +88,15 @@ javascript: (async () => {
               pattern.setAttribute('width', `${width}`)
               pattern.setAttribute('height', `${height}`)
   
-              const image = document.createElementNS(svgNS, 'image')
-              image.setAttribute('href', imageSrc)
-              image.setAttribute('width', `${width}`)
-              image.setAttribute('height', `${height}`)
+              const image = await new Promise((resolve, reject) => {
+                const image = document.createElementNS(svgNS, 'image')
+                image.onload = () => {
+                  resolve(image)
+                }
+                image.setAttribute('href', imageSrc)
+                image.setAttribute('width', `${width}`)
+                image.setAttribute('height', `${height}`)
+              })
   
               pattern.append(image)
               defs.append(pattern)
@@ -154,7 +160,6 @@ javascript: (async () => {
           }
 
           // fire the callback when all images have been loaded
-          console.log(context)
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
@@ -564,7 +569,7 @@ javascript: (async () => {
     draw(chartData, onDraw) {
       this.chartData = chartData
       this.renderedSlicesCount = 0
-      this.renderedLabelsCount = 0
+      this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
 
       // draw the title
       const titleBorderEl = document.createElement('div')
