@@ -262,29 +262,57 @@ javascript: (async () => {
       parentEl.append(tspan)
     }
 
-    static _createTextInputElement(placeholder, defaultValue, onChange) {
-      const el = document.createElement('label')
-      el.className = 'KSTextInput'
+    static _createTitleElement(title) {
+      const titleEl = document.createElement('span')
+      titleEl.style['font-weight'] = 700
+      titleEl.style['font-size'] = '1.2rem'
+      titleEl.style['display'] = 'block'
+      titleEl.className = 'Title'
+      titleEl.textContent = title
+      return titleEl
+    }
 
-      const inputEl = document.createElement('input')
-      inputEl.type = 'text'
+    static _createTextInputElement(title, placeholder, defaultValue, onChange) {
+      const el = document.createElement('div')
+      el.style['width'] = 'calc(100% - 120px)'
+
+      const titleEl = ImagePieChart._createTitleElement(title)
+
+      const labelEl = document.createElement('label')
+      labelEl.className = 'KSTextInput'
+
+      const inputEl = document.createElement('textarea')
+      inputEl.rows = 1
       inputEl.value = defaultValue
       inputEl.placeholder = placeholder
       inputEl.className = 'KSTextInput_text'
+      inputEl.style['height'] = '44px'
+      inputEl.style['padding'] = '10px 6px'
+      inputEl.style['margin-top'] = '8px'
+      inputEl.style['margin-bottom'] = '8px'
       inputEl.oninput = () => {
         if (onChange) { onChange(inputEl) }
       }
+      labelEl.append(inputEl)
 
-      el.append(inputEl)
+      el.append(titleEl, labelEl)
       return el
     }
 
-    static _createSelectElement(options, defaultValue, onChange) {
-      const el = document.createElement('label')
-      el.className = 'KSSelect'
+    static _createSelectElement(title, options, defaultValue, onChange) {
+      const el = document.createElement('div')
+      el.style['width'] = '120px'
 
-      const divEl = document.createElement('div')
-      divEl.className = 'KSSelect_inner'
+      const titleEl = ImagePieChart._createTitleElement(title)
+
+      const labelEl = document.createElement('label')
+      labelEl.className = 'KSSelect'
+      labelEl.style['width'] = 'calc(100% - 2px)'
+      labelEl.style['margin-top'] = '8px'
+      labelEl.style['margin-bottom'] = '8px'
+
+      const labelInnerEl = document.createElement('div')
+      labelInnerEl.className = 'KSSelect_inner'
 
       const selectEl = document.createElement('select')
       selectEl.title = 'その他の割合'
@@ -304,14 +332,17 @@ javascript: (async () => {
         selectEl.append(optionEl)
       })
 
-      divEl.append(selectEl)
-      el.append(divEl)
+      labelInnerEl.append(selectEl)
+      labelEl.append(labelInnerEl)
+
+      el.append(titleEl, labelEl)
       return el
     }
 
     static _createCheckBoxElement(label, defaultValue, onChange) {
       const el = document.createElement('label')
       el.className = 'KSCheckBox'
+      el.style['margin-right'] = '0.7em'
   
       const inputEl = document.createElement('input')
       inputEl.type = 'checkbox'
@@ -332,7 +363,27 @@ javascript: (async () => {
       return el
     }
   
-    injectButtonElements() {
+    static _createButtonElement(label, onPress) {
+      const el = document.createElement('div')
+      el.className = 'Layout Layout-center'
+
+      const buttonEl = document.createElement('a')
+      buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
+        ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
+        : 'Button Button-texture noLinkBtn'
+      buttonEl.onclick = () => {
+        if (onPress) { onPress(buttonEl) }
+      }
+      const spanEl = document.createElement('span')
+      spanEl.className = 'bebel'
+      spanEl.textContent = label
+
+      buttonEl.append(spanEl)
+      el.append(buttonEl)
+      return el
+    }
+
+    injectControlElements() {
       // do nothing if elements have been already injected
       const parentEl = document.querySelector('div.MainArea > div.ContentsArea > section')
       let layoutEl = parentEl.querySelector('#ct-layout')
@@ -345,16 +396,23 @@ javascript: (async () => {
       layoutEl.className = 'Layout'
 
       const headEl = document.createElement('h2')
-      headEl.className = 'Heading2 btM10'
+      headEl.className = 'Heading2'
       headEl.textContent = 'デッキ分布図つくるマシーン'
 
+      const containerEl = document.createElement('div')
+      containerEl.style['display'] = 'flex'
+
       const inputEl = ImagePieChart._createTextInputElement(
+        'タイトル',
         '大会名など',
         this.title,
         (el) => {
           this.title = el.value
         })
+      inputEl.style['margin-bottom'] = '4px'
+      inputEl.style['margin-right'] = '0.7em'
       const selectEl = ImagePieChart._createSelectElement(
+        'その他の割合',
         [
           { label: '0%', value: 0.00 },
           { label: '5%', value: 0.05 },
@@ -370,33 +428,28 @@ javascript: (async () => {
         (el) => {
           this.otherRatio = el.value
         })
+      selectEl.style['margin-bottom'] = '4px'
+      containerEl.append(inputEl, selectEl)
+
       const checkLabelEl = ImagePieChart._createCheckBoxElement(
         'ラベルを隠す',
         this.hideLabel,
         (el) => {
           this.hideLabel = el.checked
         })
-
       const checkBackgroundEl = ImagePieChart._createCheckBoxElement(
         '背景を透過する',
         this.transparentBackground,
         (el) => {
           this.transparentBackground = el.checked
         })
+      const buttonEl = ImagePieChart._createButtonElement(
+        'デッキ分布図をつくる',
+        (el) => {
+          this.onPress(el)
+        })
   
-      const buttonEl = document.createElement('a')
-      buttonEl.className = KS.UA.Tablet || KS.UA.Mobile
-        ? 'Button Button-texture Button-responsive Button-large noLinkBtn'
-        : 'Button Button-texture noLinkBtn'
-      buttonEl.onclick = () => {
-        this.onPress(buttonEl)
-      }
-      const spanEl = document.createElement('span')
-      spanEl.className = 'bebel'
-      spanEl.textContent = 'デッキ分布図をつくる'
-      buttonEl.append(spanEl)
-  
-      layoutEl.append(headEl, inputEl, selectEl, checkLabelEl, checkBackgroundEl, buttonEl)
+      layoutEl.append(headEl, containerEl, checkLabelEl, checkBackgroundEl, buttonEl)
       parentEl.append(layoutEl)
       return layoutEl
     }
@@ -681,6 +734,6 @@ javascript: (async () => {
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
   const ipc = new ImagePieChart()
-  ipc.injectButtonElements()
+  ipc.injectControlElements()
   ipc.injectInputElements()
 })()
