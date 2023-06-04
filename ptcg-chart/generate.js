@@ -88,10 +88,21 @@ javascript: (async () => {
               pattern.setAttribute('width', `${width}`)
               pattern.setAttribute('height', `${height}`)
   
-              const image = document.createElementNS(svgNS, 'image')
-              image.setAttribute('href', await createDataURL(imageSrc))
-              image.setAttribute('width', `${width}`)
-              image.setAttribute('height', `${height}`)
+              const image = await new Promise(async (resolve, reject) => {
+                const image = document.createElementNS(svgNS, 'image')
+                image.setAttribute('href', await createDataURL(imageSrc))
+                image.setAttribute('width', `${width}`)
+                image.setAttribute('height', `${height}`)
+                const observer = new ResizeObserver((_) => {
+                  console.log(`(${image.width.baseVal.value},${image.height.baseVal.value})`)
+                  if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
+                    return
+                  }
+                  observer.unobserve(image)
+                  resolve(image)
+                })
+                observer.observe(image)
+              })
   
               pattern.appendChild(image)
               defs.appendChild(pattern)
