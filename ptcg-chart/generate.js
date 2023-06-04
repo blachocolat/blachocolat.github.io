@@ -91,11 +91,9 @@ javascript: (async () => {
               const image = await new Promise((resolve, reject) => {
                 const image = document.createElementNS(svgNS, 'image')
                 image.onload = () => { resolve(image) }
-                // image.setAttribute('href', imageSrc)
-                image.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', imageSrc)
+                image.setAttribute('href', imageSrc)
                 image.setAttribute('width', `${width}`)
                 image.setAttribute('height', `${height}`)
-                console.log(image)
               })
   
               pattern.appendChild(image)
@@ -743,7 +741,9 @@ javascript: (async () => {
     return new Promise((resolve, reject) => {
       const el = document.createElement('link')
       el.rel = 'stylesheet'
-      el.onload = () => { resolve() }
+      el.onload = () => {
+        resolve()
+      }
       el.href = href
       document.head.append(el)
     })
@@ -752,7 +752,9 @@ javascript: (async () => {
   const injectScript = (src) => {
     return new Promise((resolve, reject) => {
       const el = document.createElement('script')
-      el.onload = () => { resolve() }
+      el.onload = () => {
+        resolve()
+      }
       el.src = src
       document.head.append(el)
     })
