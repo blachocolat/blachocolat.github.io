@@ -88,10 +88,10 @@ javascript: (async () => {
               pattern.setAttribute('width', `${width}`)
               pattern.setAttribute('height', `${height}`)
   
-              const image = await new Promise((resolve, reject) => {
+              const image = await new Promise(async (resolve, reject) => {
                 const image = document.createElementNS(svgNS, 'image')
                 image.onload = () => { resolve(image) }
-                image.setAttribute('href', imageSrc)
+                image.setAttribute('href', await createDataURL(imageSrc))
                 image.setAttribute('width', `${width}`)
                 image.setAttribute('height', `${height}`)
               })
@@ -617,14 +617,21 @@ javascript: (async () => {
       LocalStorage.setItem('cardNames', JSON.stringify(cardNames))
   
       // draw with dataURL images
-      const promises = cards.map(async (card) => {
+      // const promises = cards.map(async (card) => {
+      //   return {
+      //     label: card.name,
+      //     value: card.count,
+      //     imageSrc: card.imageSrc ? await createDataURL(card.imageSrc) : new Promise(),
+      //   }
+      // })
+      // const chartData = await Promise.all(promises)
+      const chartData = cards.map((card) => {
         return {
           label: card.name,
           value: card.count,
-          imageSrc: card.imageSrc ? await createDataURL(card.imageSrc) : new Promise(),
+          imageSrc: card.imageSrc,
         }
       })
-      const chartData = await Promise.all(promises)
       this.draw(chartData, async () => {
         await this.openAsPNG()
         el.classList.remove('disabled')
@@ -741,9 +748,7 @@ javascript: (async () => {
     return new Promise((resolve, reject) => {
       const el = document.createElement('link')
       el.rel = 'stylesheet'
-      el.onload = () => {
-        resolve()
-      }
+      el.onload = () => { resolve() }
       el.href = href
       document.head.append(el)
     })
@@ -752,9 +757,7 @@ javascript: (async () => {
   const injectScript = (src) => {
     return new Promise((resolve, reject) => {
       const el = document.createElement('script')
-      el.onload = () => {
-        resolve()
-      }
+      el.onload = () => { resolve() }
       el.src = src
       document.head.append(el)
     })
