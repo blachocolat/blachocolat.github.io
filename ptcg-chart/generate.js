@@ -89,10 +89,9 @@ javascript: (async () => {
               pattern.setAttribute('height', `${height}`)
   
               const image = document.createElementNS(svgNS, 'image')
-              console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
+              image.setAttribute('href', await createDataURL(imageSrc))
               image.setAttribute('width', `${width}`)
               image.setAttribute('height', `${height}`)
-              image.setAttribute('href', await createDataURL(imageSrc))
   
               pattern.appendChild(image)
               defs.appendChild(pattern)
@@ -102,17 +101,6 @@ javascript: (async () => {
                 'style',
                 `fill: url(#${imageId})`
               )
-
-              await new Promise((resolve, reject) => {
-                const interval = setInterval(() => {
-                  if (image.width.baseVal.value == 0 || image.height.baseVal.value == 0) {
-                    return
-                  }
-                  console.log(`[${context.index}] = (${image.width.baseVal.value},${image.height.baseVal.value})`)
-                  clearInterval(interval)
-                  resolve()
-                }, 1000 / 60)
-              })
             } else {
               context.element._node.setAttribute('style', 'fill: #9e9e9e')
             }
@@ -729,7 +717,12 @@ javascript: (async () => {
         canvas.height = image.height
         const context = canvas.getContext('2d')
         context?.drawImage(image, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
+        const dataURL = canvas.toDataURL('image/png')
+        
+        const dummy = new Image()
+        dummy.onload = () => { resolve(dataURL) }
+        dummy.onerror = reject
+        dummy.src = dataURL
       }
       image.onerror = reject
       image.src = url
