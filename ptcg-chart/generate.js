@@ -161,7 +161,7 @@ javascript: (async () => {
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
-            const count = 0
+            let count = 0
             const interval = setInterval(async () => {
               count += 1
               await this.onDraw()
