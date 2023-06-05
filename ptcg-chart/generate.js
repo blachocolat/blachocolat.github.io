@@ -155,20 +155,17 @@ javascript: (async () => {
           }
 
           // fire the callback when all images have been loaded
-          console.log(context)
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
-            let count = 0
-            const interval = setInterval(async () => {
-              count += 1
-              await this.onDraw()
-              if (count >= 10) {
-                window.clearInterval(interval)
-              }
-            }, 100)
+            await new Promise((resolve, reject) => {
+              setTimeout(async () => {
+                await this.onDraw()
+                resolve()
+              }, 100)
+            })
           }
         }
       )
