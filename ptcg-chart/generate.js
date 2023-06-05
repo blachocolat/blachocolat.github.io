@@ -161,7 +161,14 @@ javascript: (async () => {
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
-            await this.onDraw()
+            const count = 0
+            const interval = setInterval(async () => {
+              count += 1
+              await this.onDraw()
+              if (count >= 10) {
+                window.clearInterval(interval)
+              }
+            }, 100)
           }
         }
       )
