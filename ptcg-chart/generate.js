@@ -119,7 +119,7 @@ javascript: (async () => {
               // emphasize the percentage
               const matches = line.match(/^([0-9]{1,3})((?:\.[0-9]+)?%)$/)
   
-              if (matches.length == 3) {
+              if (matches && matches.length == 3) {
                 ImagePieChart._drawText(context.element._node, matches[1], {
                   x: `${context.x}`,
                   dy: '1.1em',
@@ -725,7 +725,7 @@ javascript: (async () => {
           id: cardId,
           name: imageEl.alt,
           imageSrc: imageEl.src,
-          count: parseInt(inputEl.value || countEl.innerText, 10) || 0,
+          count: parseInt(inputEl && inputEl.value || countEl.innerText, 10) || 0,
         }
       })
       .filter((data) => data.count > 0)
