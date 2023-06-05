@@ -119,7 +119,7 @@ javascript: (async () => {
               // emphasize the percentage
               const matches = line.match(/^([0-9]{1,3})((?:\.[0-9]+)?%)$/)
   
-              if (matches?.length == 3) {
+              if (matches.length == 3) {
                 ImagePieChart._drawText(context.element._node, matches[1], {
                   x: `${context.x}`,
                   dy: '1.1em',
@@ -476,7 +476,7 @@ javascript: (async () => {
             countEl.style['marginTop'] = 0
             countEl.style['marginBottom'] = 0
   
-            if (countEl?.querySelector('span')) {
+            if (countEl.querySelector('span')) {
               const inputEl = document.createElement('input')
               inputEl.type = 'text'
               inputEl.pattern = '^[0-9]+$'
@@ -706,7 +706,7 @@ javascript: (async () => {
         canvas.width = image.width
         canvas.height = image.height
         const context = canvas.getContext('2d')
-        context?.drawImage(image, 0, 0)
+        context.drawImage(image, 0, 0)
         resolve(canvas.toDataURL('image/png'))
       }
       image.onerror = reject
@@ -720,12 +720,12 @@ javascript: (async () => {
         const imageEl = el.querySelector('tr.imgBlockArea > td > a > img')
         const cardId = parseInt(imageEl.id.replace(/^img_([0-9]+)$/, '$1'), 10)
         const countEl = el.querySelector('tr > td.cPos.nowrap > *')
-        const inputEl = countEl?.querySelector('input[type="text"]')
+        const inputEl = countEl.querySelector('input[type="text"]')
         return {
           id: cardId,
           name: imageEl.alt,
           imageSrc: imageEl.src,
-          count: parseInt(inputEl?.value || countEl?.innerText, 10) || 0,
+          count: parseInt(inputEl.value || countEl.innerText, 10) || 0,
         }
       })
       .filter((data) => data.count > 0)
@@ -752,7 +752,7 @@ javascript: (async () => {
 
   // inject stylesheets and scripts
   await injectStyleSheet('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css')
-  await injectStyleSheet('https://blachocolat.github.io/ptcg-chart/style.css')
+  await injectStyleSheet('https://blachocolat.github.io/ptcg-chart/style.min.css')
   await injectScript('https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js')
   await injectScript('https://cdn.jsdelivr.net/npm/html2canvas/dist/html2canvas.min.js')
 
