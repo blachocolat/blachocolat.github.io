@@ -164,7 +164,7 @@ javascript: (async () => {
               setTimeout(async () => {
                 await this.onDraw()
                 resolve()
-              }, 100)
+              }, 1000)
             })
           }
         }
