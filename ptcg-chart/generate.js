@@ -642,7 +642,7 @@ javascript: (async () => {
       if (w) {
         w.document.write(`<img src="${dataURL}" />`)
       } else {
-        window.alert('ポップアップウインドウが許可されていないため、デッキ分布図を作成できませんでした。')
+        window.alert('デッキ分布図を作成できませんでした。\nWebブラウザの設定から、ポップアップウインドウを許可してください。')
       }
     }
   }
@@ -748,6 +748,13 @@ javascript: (async () => {
       el.src = src
       document.head.append(el)
     })
+  }
+
+  // do nothing unless the current page is the deck builder
+  const pattern = /^https:\/\/www\.pokemon-card\.com\/deck\/(deck.html(\?deckID=[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{6})?|[^.]+.html\/deckID\/[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{6}\/?)$/
+  if (!pattern.test(window.location.href)) {
+    window.alert('デッキ分布図を作成できませんでした。\nデッキ作成ツールを開いて、プログラムを実行してください。')
+    return
   }
 
   // inject stylesheets and scripts
