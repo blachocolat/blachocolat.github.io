@@ -6,9 +6,9 @@ javascript: (async () => {
       this.otherRatio = LocalStorage.getFloat('otherRatio', 0.15)
       this.hideLabel = LocalStorage.getBoolean('hideLabel', false)
       this.transparentBackground = LocalStorage.getBoolean('transparentBackground', false)
-      this.scale = 1.25
-      this.offsetX = 0
-      this.offsetY = -20
+      this.scale = 1.5
+      this.offsetX = 180
+      this.offsetY = 30
       this.holeRadius = 60
 
       this.canvasEl = ImagePieChart._injectChart()
@@ -37,7 +37,6 @@ javascript: (async () => {
               const angleList = [
                 context.startAngle,
                 context.endAngle,
-                0,
                 90,
                 180,
                 270,
@@ -47,6 +46,8 @@ javascript: (async () => {
               let maxX = -Number.MAX_VALUE
               let maxY = -Number.MAX_VALUE
   
+              // calculate the ideal position (as in the unit circle)
+              const holeRatio = this.holeRadius / context.radius
               for (const angle of angleList) {
                 if (angle < context.startAngle) {
                   continue
@@ -54,28 +55,35 @@ javascript: (async () => {
                 if (context.endAngle < angle) {
                   break
                 }
-  
+
                 const outerX = Math.sin(angle * (Math.PI / 180))
                 const outerY = -Math.cos(angle * (Math.PI / 180))
-                const innerX = outerX * (this.holeRadius / context.radius)
-                const innerY = outerY * (this.holeRadius / context.radius)
+                const innerX = outerX * holeRatio
+                const innerY = outerY * holeRatio
                 minX = Math.min(minX, innerX, outerX)
                 minY = Math.min(minY, innerY, outerY)
                 maxX = Math.max(maxX, innerX, outerX)
                 maxY = Math.max(maxY, innerY, outerY)
               }
-  
+
+              // calculate the center of gravity
+              const offsetTheta =
+                ((context.startAngle + context.endAngle) / 2) * (Math.PI / 180)
+              const theta =
+                ((context.endAngle - context.startAngle) / 2) * (Math.PI / 180)
+              const gravityRatio =
+                (2 * (1 + holeRatio + holeRatio * holeRatio) * Math.sin(theta)) /
+                (3 * (1 + holeRatio) * theta)
+              const gravityX = gravityRatio * Math.sin(offsetTheta)
+              const gravityY = gravityRatio * -Math.cos(offsetTheta)
+
               const scale = (Math.max(maxX - minX, maxY - minY) / 2) * this.scale
               const width = baseWidth * scale
               const height = baseHeight * scale
               const offsetX =
-                context.radius * ((minX + maxX) / 2 - (scale - 1)) +
-                180 +
-                this.offsetX
+                context.radius * (gravityX - (scale - 1)) + this.offsetX
               const offsetY =
-                context.radius * ((minY + maxY) / 2 - ((maxY - minY) / 2 - 1)) +
-                18 +
-                this.offsetY
+                context.radius * (gravityY - (scale - 1)) + this.offsetY
   
               const svgNS = 'http://www.w3.org/2000/svg'
               const defs = document.createElementNS(svgNS, 'defs')
