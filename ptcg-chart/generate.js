@@ -6,7 +6,7 @@ javascript: (async () => {
       this.otherRatio = LocalStorage.getFloat('otherRatio', 0.15)
       this.hideLabel = LocalStorage.getBoolean('hideLabel', false)
       this.transparentBackground = LocalStorage.getBoolean('transparentBackground', false)
-      this.scale = 1.5
+      this.scale = 1.0
       this.offsetX = 180
       this.offsetY = 30
       this.holeRadius = 60
@@ -34,39 +34,8 @@ javascript: (async () => {
             if (imageSrc) {
               const imageId = `img-${Math.random().toString(36).substr(2, 8)}`
   
-              const angleList = [
-                context.startAngle,
-                context.endAngle,
-                90,
-                180,
-                270,
-              ]
-              let minX = Number.MAX_VALUE
-              let minY = Number.MAX_VALUE
-              let maxX = -Number.MAX_VALUE
-              let maxY = -Number.MAX_VALUE
-  
-              // calculate the ideal position (as in the unit circle)
-              const holeRatio = this.holeRadius / context.radius
-              for (const angle of angleList) {
-                if (angle < context.startAngle) {
-                  continue
-                }
-                if (context.endAngle < angle) {
-                  break
-                }
-
-                const outerX = Math.sin(angle * (Math.PI / 180))
-                const outerY = -Math.cos(angle * (Math.PI / 180))
-                const innerX = outerX * holeRatio
-                const innerY = outerY * holeRatio
-                minX = Math.min(minX, innerX, outerX)
-                minY = Math.min(minY, innerY, outerY)
-                maxX = Math.max(maxX, innerX, outerX)
-                maxY = Math.max(maxY, innerY, outerY)
-              }
-
               // calculate the center of gravity
+              const holeRatio = this.holeRadius / context.radius
               const offsetTheta =
                 ((context.startAngle + context.endAngle) / 2) * (Math.PI / 180)
               const theta =
@@ -77,7 +46,16 @@ javascript: (async () => {
               const gravityX = gravityRatio * Math.sin(offsetTheta)
               const gravityY = gravityRatio * -Math.cos(offsetTheta)
 
-              const scale = (Math.max(maxX - minX, maxY - minY) / 2) * this.scale
+              // calculate the ideal image size
+              const scale = Math.min(
+                Math.max(
+                  ((1 / 200) * (context.endAngle - context.startAngle) +
+                    70 / 200) *
+                    this.scale,
+                  0.5
+                ),
+                1.25
+              )
               const width = baseWidth * scale
               const height = baseHeight * scale
               const offsetX =
