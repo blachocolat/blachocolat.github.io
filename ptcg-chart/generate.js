@@ -366,10 +366,15 @@ javascript: (async () => {
       const containerEl = document.createElement('div')
       containerEl.className = 'ct-container'
       
+      const subChartEl = document.createElement('div')
+      subChartEl.id = 'ct-sub-chart'
+      subChartEl.className = 'ct-chart'
+      
       const chartEl = document.createElement('div')
       chartEl.id = 'ct-chart'
       chartEl.className = 'ct-chart'
 
+      containerEl.append(subChartEl)
       containerEl.append(chartEl)
       el.append(containerEl)
       document.body.append(el)
