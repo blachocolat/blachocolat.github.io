@@ -25,7 +25,7 @@ javascript: (async () => {
       )
 
       this.renderedSlicesCount = 0
-      this.renderedSubSlicesCount = 0
+      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       this.onDraw = null
   
@@ -272,7 +272,7 @@ javascript: (async () => {
           filtered.push({
             label: 'その他',
             value: remainingTotal,
-            imageSrc: '/blank-bg.png#blank',
+            imageSrc: 'https://blachocolat.github.io/ptcg-chart/blank-bg.png#blank',
             children: remainingChildren,
           })
         }
@@ -558,22 +558,22 @@ javascript: (async () => {
       containerEl.append(inputEl, selectEl)
 
       const checkStyleEl = ImagePieChart._createCheckBoxElement(
-        '内訳を非表示',
-        !this.isNested,
+        '内訳あり',
+        this.isNested,
         (el) => {
-          this.isNested = !el.checked
+          this.isNested = el.checked
         })
       const checkLabelEl = ImagePieChart._createCheckBoxElement(
-        'ラベルを非表示',
-        this.hideLabel,
+        'ラベルあり',
+        !this.hideLabel,
         (el) => {
-          this.hideLabel = el.checked
+          this.hideLabel = !el.checked
         })
       const checkBackgroundEl = ImagePieChart._createCheckBoxElement(
-        '背景を透過',
-        this.transparentBackground,
+        '背景色あり',
+        !this.transparentBackground,
         (el) => {
-          this.transparentBackground = el.checked
+          this.transparentBackground = !el.checked
         })
       const buttonEl = ImagePieChart._createButtonElement(
         'デッキ分布図をつくる',
@@ -581,7 +581,7 @@ javascript: (async () => {
           this.onPress(el)
         })
   
-      layoutEl.append(headEl, containerEl, checkLabelEl, checkBackgroundEl, buttonEl)
+      layoutEl.append(headEl, containerEl, checkStyleEl, checkLabelEl, checkBackgroundEl, buttonEl)
       parentEl.append(layoutEl)
       return layoutEl
     }
@@ -705,6 +705,7 @@ javascript: (async () => {
     draw(chartData, onDraw) {
       this.chartData = chartData
       this.renderedSlicesCount = 0
+      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
 
       // draw the title
