@@ -708,7 +708,7 @@ javascript: (async () => {
       this.renderedSlicesCount = 0
       this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
-      console.log(`should be rendered: ${this.renderedSlicesCount} main slices, ${this.renderedSubSlicesCount} sub slices, ${this.renderedLabelsCount} labels`)
+      console.log(`Expected rendering: ${this.renderedSlicesCount} main slices, ${this.renderedSubSlicesCount} sub slices, ${this.renderedLabelsCount} labels`)
 
       // draw the title
       const titleBorderEl = document.createElement('div')
