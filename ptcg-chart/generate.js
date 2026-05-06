@@ -38,7 +38,6 @@ javascript: (async () => {
           if (context.type == 'slice') {
             const imageSrc = this.chartistData.imageSrcs[context.index]
             if (!imageSrc) {
-              context.element._node.setAttribute('style', 'fill: #9e9e9e')
               return
             }
 
@@ -165,7 +164,6 @@ javascript: (async () => {
           if (context.type == 'slice') {
             const imageSrc = this.subChartistData.imageSrcs[context.index]
             if (!imageSrc) {
-              context.element._node.setAttribute('style', 'fill: #9e9e9e')
               return
             }
 
@@ -710,9 +708,7 @@ javascript: (async () => {
       this.renderedSlicesCount = 0
       this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
-      console.log(`renderedSlicesCount: ${this.chartistData.series.length}`)
-      console.log(`renderedSubSlicesCount: ${this.subChartistData.series.length}`)
-      console.log(`renderedLabelsCount: ${this.chartistData.labels.length}`)
+      console.log(`should be rendered: ${this.renderedSlicesCount} main slices, ${this.renderedSubSlicesCount} sub slices, ${this.renderedLabelsCount} labels`)
 
       // draw the title
       const titleBorderEl = document.createElement('div')
@@ -789,7 +785,7 @@ javascript: (async () => {
         } else {
           // if the card is checked, add its count to the last entry in chartData
           const lastItem = chartData[chartData.length - 1]
-          if (lastItem?.children) {
+          if (lastItem && lastItem.children) {
             lastItem.children.push({
               label: data.name,
               value: data.count,
@@ -869,7 +865,7 @@ javascript: (async () => {
   const injectGlobalObserver = (selector, onUpdate) => {
     if (typeof globalObserver === 'undefined') {
       // global define
-      globalObserver = new MutationObserver(async () => {
+      globalObserver = new MutationObserver(() => {
         if (onUpdate) { onUpdate() }
       })
       globalObserver.observe(
@@ -939,6 +935,9 @@ javascript: (async () => {
       document.head.append(el)
     })
   }
+
+  // main
+  console.log('ptcg-chart/generate.js (v0.8.1) for development is running...')
 
   // do nothing unless the current page is the deck builder
   const pattern = /^https:\/\/www\.pokemon-card\.com\/deck\/(deck.html(\?deckID=[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{6})?|[^.]+.html\/deckID\/[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{6}\/?)$/
