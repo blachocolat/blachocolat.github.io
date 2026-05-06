@@ -651,15 +651,10 @@ javascript: (async () => {
               countEl.querySelector('br').remove()
             }
           }
-        const checkEl = el.querySelector('#chkImg_' + cardId)
-        if (
-          checkEl &&
-          typeof globalCardChecked !== 'undefined' &&
-          globalCardChecked.hasOwnProperty(cardId)
-        ) {
-          checkEl.checked = globalCardChecked[cardId]
-          checkEl.dispatchEvent(new Event('change'))
-        }
+          const checkEl = el.querySelector('#chkImg_' + cardId)
+          checkEl.checked = cardCheckedStates.hasOwnProperty(cardId)
+            ? cardCheckedStates[cardId]
+            : false
           const trEl = document.createElement('tr')
           const tdEl = document.createElement('td')
           tdEl.setAttribute('colspan', 2)
@@ -745,6 +740,7 @@ javascript: (async () => {
         signatureEl.remove()
       }
 
+      // render the chart
       this.chart.update(this.chartistData, this.chartistOptions)
       if (this.isNested) {
         this.subChart.update(this.subChartistData, this.subChartistOptions)
@@ -873,7 +869,7 @@ javascript: (async () => {
   const injectGlobalObserver = (selector, onUpdate) => {
     if (typeof globalObserver === 'undefined') {
       // global define
-      globalObserver = new MutationObserver(async (_) => {
+      globalObserver = new MutationObserver(async () => {
         if (onUpdate) { onUpdate() }
       })
       globalObserver.observe(
