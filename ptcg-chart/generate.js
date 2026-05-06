@@ -25,7 +25,7 @@ javascript: (async () => {
       )
 
       this.renderedSlicesCount = 0
-      this.renderedSubSlicesCount = 0
+      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       this.onDraw = null
   
@@ -147,7 +147,7 @@ javascript: (async () => {
             console.log(`Rendered main label: ${context.text}, count: ${this.renderedLabelsCount}`)
           }
 
-          // fire the callback when all images have been loaded
+          // fire the callback when all slices and labels have been rendered
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.series.length &&
@@ -228,7 +228,7 @@ javascript: (async () => {
             console.log(`Rendered sub slice: ${imageSrc}, count: ${this.renderedSubSlicesCount}`)
           }
 
-          // fire the callback when all images have been loaded
+          // fire the callback when all slices and labels have been rendered
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.series.length &&
@@ -713,7 +713,7 @@ javascript: (async () => {
     draw(chartData, onDraw) {
       this.chartData = chartData
       this.renderedSlicesCount = 0
-      this.renderedSubSlicesCount = 0
+      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       console.log(`renderedSlicesCount: ${this.chartistData.series.length}`)
       console.log(`renderedSubSlicesCount: ${this.subChartistData.series.length}`)
@@ -736,6 +736,7 @@ javascript: (async () => {
 
       this.canvasEl.querySelector('.ct-container').append(titleBorderEl, titleEl, signatureEl)
 
+      // register the callback that will be called after all slices and labels are rendered
       this.onDraw = async () => {
         if (onDraw) { await onDraw() }
         titleBorderEl.remove()
@@ -743,8 +744,11 @@ javascript: (async () => {
         twitterEl.remove()
         signatureEl.remove()
       }
+
       this.chart.update(this.chartistData, this.chartistOptions)
-      this.subChart.update(this.subChartistData, this.subChartistOptions)
+      if (this.isNested) {
+        this.subChart.update(this.subChartistData, this.subChartistOptions)
+      }
     }
 
     async onPress(el) {
