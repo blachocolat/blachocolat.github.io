@@ -6,6 +6,7 @@ javascript: (async () => {
       this.otherRatio = LocalStorage.getFloat('otherRatio', 0.15)
       this.hideLabel = LocalStorage.getBoolean('hideLabel', false)
       this.transparentBackground = LocalStorage.getBoolean('transparentBackground', false)
+      this.isNested = LocalStorage.getBoolean('isNested', false)
       this.scale = 1.0
       this.offsetX = 180
       this.offsetY = 30
@@ -17,8 +18,14 @@ javascript: (async () => {
         this.chartistData,
         this.chartistOptions
       )
+      this.subChart = new Chartist.Pie(
+        '#ct-sub-chart',
+        this.subChartistData,
+        this.subChartistOptions
+      )
 
       this.renderedSlicesCount = 0
+      this.renderedSubSlicesCount = 0
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       this.onDraw = null
   
@@ -30,66 +37,64 @@ javascript: (async () => {
         async (context) => {
           if (context.type == 'slice') {
             const imageSrc = this.chartistData.imageSrcs[context.index]
-  
-            if (imageSrc) {
-              const imageId = `img-${Math.random().toString(36).substr(2, 8)}`
-  
-              // calculate the center of gravity
-              const holeRatio = this.holeRadius / context.radius
-              const offsetTheta =
-                ((context.startAngle + context.endAngle) / 2) * (Math.PI / 180)
-              const theta =
-                ((context.endAngle - context.startAngle) / 2) * (Math.PI / 180)
-              const gravityRatio =
-                (2 * (1 + holeRatio + holeRatio * holeRatio) * Math.sin(theta)) /
-                (3 * (1 + holeRatio) * theta)
-              const gravityX = gravityRatio * Math.sin(offsetTheta)
-              const gravityY = gravityRatio * -Math.cos(offsetTheta)
-
-              // calculate the ideal image size
-              const scale = Math.min(
-                Math.max(
-                  ((1 / 200) * (context.endAngle - context.startAngle) +
-                    70 / 200) *
-                    this.scale,
-                  0.5
-                ),
-                1.25
-              )
-              const width = baseWidth * scale
-              const height = baseHeight * scale
-              const offsetX =
-                context.radius * (gravityX - (scale - 1)) + this.offsetX
-              const offsetY =
-                context.radius * (gravityY - (scale - 1)) + this.offsetY
-  
-              const svgNS = 'http://www.w3.org/2000/svg'
-              const defs = document.createElementNS(svgNS, 'defs')
-  
-              const pattern = document.createElementNS(svgNS, 'pattern')
-              pattern.setAttribute('id', imageId)
-              pattern.setAttribute('patternUnits', 'userSpaceOnUse')
-              pattern.setAttribute('x', `${offsetX}`)
-              pattern.setAttribute('y', `${offsetY}`)
-              pattern.setAttribute('width', `${width}`)
-              pattern.setAttribute('height', `${height}`)
-  
-              const image = document.createElementNS(svgNS, 'image')
-              image.setAttribute('href', await createDataURL(imageSrc))
-              image.setAttribute('width', `${width}`)
-              image.setAttribute('height', `${height}`)
-  
-              pattern.appendChild(image)
-              defs.appendChild(pattern)
-              this.chart.svg._node.appendChild(defs)
-  
-              context.element._node.setAttribute(
-                'style',
-                `fill: url(#${imageId})`
-              )
-            } else {
+            if (!imageSrc) {
               context.element._node.setAttribute('style', 'fill: #9e9e9e')
+              return
             }
+
+            // calculate the center of gravity
+            const holeRadius = this.holeRadius + (this.isNested ? 46 : 0)
+            const holeRatio = holeRadius / context.radius
+            const offsetTheta =
+              ((context.startAngle + context.endAngle) / 2) * (Math.PI / 180)
+            const theta =
+              ((context.endAngle - context.startAngle) / 2) * (Math.PI / 180)
+            const gravityRatio =
+              (2 * (1 + holeRatio + holeRatio * holeRatio) * Math.sin(theta)) /
+              (3 * (1 + holeRatio) * theta)
+            const gravityX = gravityRatio * Math.sin(offsetTheta)
+            const gravityY = gravityRatio * -Math.cos(offsetTheta)
+
+            // calculate the ideal image size
+            const scaleFactor = this.isNested ? 225 : 200
+            const scale = Math.min(
+              Math.max(
+                ((1 / scaleFactor) * (context.endAngle - context.startAngle) +
+                  70 / scaleFactor) *
+                  this.scale,
+                this.isNested ? 0.375 : 0.45
+              ),
+              1.25
+            )
+            const width = imageSrc.endsWith('#blank') ? 22 : baseWidth * scale
+            const height = imageSrc.endsWith('#blank') ? 19 : baseHeight * scale
+            const offsetX =
+              context.radius * (gravityX - (scale - 1)) + this.offsetX
+            const offsetY =
+              context.radius * (gravityY - (scale - 1)) + this.offsetY
+
+            const svgNS = 'http://www.w3.org/2000/svg'
+            const defs = document.createElementNS(svgNS, 'defs')
+
+            const imageId = `img-${Math.random().toString(36).substr(2, 8)}`
+            const pattern = document.createElementNS(svgNS, 'pattern')
+            pattern.setAttribute('id', imageId)
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse')
+            pattern.setAttribute('x', `${offsetX}`)
+            pattern.setAttribute('y', `${offsetY}`)
+            pattern.setAttribute('width', `${width}`)
+            pattern.setAttribute('height', `${height}`)
+
+            const image = document.createElementNS(svgNS, 'image')
+            image.setAttribute('href', await createDataURL(imageSrc))
+            image.setAttribute('width', `${width}`)
+            image.setAttribute('height', `${height}`)
+
+            pattern.appendChild(image)
+            defs.appendChild(pattern)
+            this.chart.svg._node.appendChild(defs)
+
+            context.element._node.setAttribute('style', `fill: url(#${imageId})`)
 
             this.renderedSlicesCount += 1
           } else if (context.type == 'label') {
@@ -108,7 +113,7 @@ javascript: (async () => {
               if (matches && matches.length == 3) {
                 ImagePieChart._drawText(context.element._node, matches[1], {
                   x: `${context.x}`,
-                  dy: '1.1em',
+                  dy: '0.95em',
                   className: 'ct-label--border ct-label--strong',
                 })
                 ImagePieChart._drawText(context.element._node, matches[2], {
@@ -122,7 +127,7 @@ javascript: (async () => {
               } else {
                 ImagePieChart._drawText(context.element._node, line, {
                   x: `${context.x}`,
-                  dy: '1.1em',
+                  dy: '0.95em',
                   className: 'ct-label--border',
                 })
                 ImagePieChart._drawText(context.element._node, line, {
@@ -144,6 +149,87 @@ javascript: (async () => {
           if (
             this.onDraw &&
             this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
+            this.renderedSubSlicesCount == this.subChartistData.imageSrcs.length &&
+            this.renderedLabelsCount == this.chartistData.labels.length
+          ) {
+            await this.onDraw()
+          }
+        }
+      )
+
+      this.subChart.on(
+        'draw',
+        async (context) => {
+          if (context.type == 'slice') {
+            const imageSrc = this.subChartistData.imageSrcs[context.index]
+            if (!imageSrc) {
+              context.element._node.setAttribute('style', 'fill: #9e9e9e')
+              return
+            }
+
+            // calculate the center of gravity for sub ring
+            const holeRatio = this.holeRadius / context.radius
+            const offsetTheta =
+              ((context.startAngle + context.endAngle) / 2) * (Math.PI / 180)
+            const theta =
+              ((context.endAngle - context.startAngle) / 2) * (Math.PI / 180)
+            const gravityRatio =
+              (2 * (1 + holeRatio + holeRatio * holeRatio) * Math.sin(theta)) /
+              (3 * (1 + holeRatio) * theta)
+            const gravityX = gravityRatio * Math.sin(offsetTheta)
+            const gravityY = gravityRatio * -Math.cos(offsetTheta)
+
+            // calculate the ideal image size
+            const scale = Math.min(
+              Math.max(
+                ((1 / 300) * (context.endAngle - context.startAngle) + 70 / 300) *
+                  this.scale,
+                0.25
+              ),
+              1.25
+            )
+            const width = baseWidth * scale
+            const height = baseHeight * scale
+            const offsetX =
+              context.radius * (gravityX - (scale - 1)) + this.offsetX + 46
+            const offsetY =
+              context.radius * (gravityY - (scale - 1)) + this.offsetY + 46
+
+            const svgNS = 'http://www.w3.org/2000/svg'
+            const defs = document.createElementNS(svgNS, 'defs')
+
+            const imageId = `img-${Math.random().toString(36).substr(2, 8)}`
+            const pattern = document.createElementNS(svgNS, 'pattern')
+            pattern.setAttribute('id', imageId)
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse')
+            pattern.setAttribute('x', `${offsetX}`)
+            pattern.setAttribute('y', `${offsetY}`)
+            pattern.setAttribute('width', `${width}`)
+            pattern.setAttribute('height', `${height}`)
+
+            const image = document.createElementNS(svgNS, 'image')
+            image.setAttribute('href', await createDataURL(imageSrc))
+            image.setAttribute('width', `${width}`)
+            image.setAttribute('height', `${height}`)
+
+            if (imageSrc.endsWith('#darken')) {
+              image.setAttribute('style', 'filter: saturate(50%) blur(2.5px)')
+            }
+
+            pattern.appendChild(image)
+            defs.appendChild(pattern)
+            this.subChart.svg._node.appendChild(defs)
+
+            context.element._node.setAttribute('style', `fill: url(#${imageId})`)
+
+            this.renderedSubSlicesCount += 1
+          }
+
+          // fire the callback when all images have been loaded
+          if (
+            this.onDraw &&
+            this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
+            this.renderedSubSlicesCount == this.subChartistData.imageSrcs.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
             await this.onDraw()
@@ -152,39 +238,82 @@ javascript: (async () => {
       )
     }
 
-    get chartistData() {
-      this.chartData.sort((a, b) => {
-        return b.value - a.value // order by value desc
-      })
-      const total = this.chartData
-        .map((data) => data.value)
-        .reduce((a, b) => a + b, 0)
+    get filteredChartData(): ImagePieChartData[] {
+      const sorted = [...this.chartData].sort((a, b) => b.value - a.value)
+      const total = sorted.map((d) => d.value).reduce((a, b) => a + b, 0)
       let subTotal = 0
       let minValue = 0
-  
-      for (const data of this.chartData) {
+
+      for (const d of sorted) {
         if (1 - this.otherRatio <= subTotal / total) {
-          minValue = data.value
+          minValue = d.value
           break
         }
-        subTotal += data.value
+        subTotal += d.value
       }
-  
-      const filteredData = this.chartData.filter((data) => data.value > minValue)
-      if (filteredData.length < this.chartData.length) {
-        const filteredTotal = filteredData
-          .map((data) => data.value)
+
+      // create "Other" entry if there are entries below the threshold
+      const filtered = sorted.filter((d) => d.value > minValue)
+      if (filtered.length < sorted.length) {
+        const remainingTotal = sorted
+          .filter((d) => d.value <= minValue)
+          .map((d) => d.value)
           .reduce((a, b) => a + b, 0)
-        filteredData.push({
-          label: 'その他',
-          value: total - filteredTotal,
-        })
+
+        // don't create "Other" entry if the total of remaining entries is 0
+        if (remainingTotal > 0) {
+          const remainingChildren = sorted
+            .filter((d) => d.value <= minValue)
+            .map((d) => ({
+              label: d.label,
+              value: d.value,
+              imageSrc: d.imageSrc,
+            }))
+          filtered.push({
+            label: 'その他',
+            value: remainingTotal,
+            imageSrc: '/blank-bg.png#blank',
+            children: remainingChildren,
+          })
+        }
       }
-  
+
+      return filtered
+    }
+
+    get chartistData() {
+      const filtered = this.filteredChartData
       return {
-        labels: filteredData.map((data) => data.label),
-        series: filteredData.map((data) => data.value),
-        imageSrcs: filteredData.map((data) => data.imageSrc),
+        labels: filtered.map((d) => d.label),
+        series: filtered.map((d) => d.value),
+        imageSrcs: filtered.map((d) => d.imageSrc),
+      }
+    }
+
+    get subChartistData() {
+      const series = []
+      const imageSrcs = []
+
+      this.filteredChartData.forEach((d) => {
+        if (d.children) {
+          d.children.forEach((child) => {
+            if (child.value <= 0) {
+              return
+            }
+
+            series.push(child.value)
+            if (d.imageSrc && d.imageSrc == child.imageSrc) {
+              imageSrcs.push(child.imageSrc + '#darken')
+            } else {
+              imageSrcs.push(child.imageSrc)
+            }
+          })
+        }
+      })
+
+      return {
+        series: series,
+        imageSrcs: imageSrcs,
       }
     }
 
@@ -192,9 +321,9 @@ javascript: (async () => {
       return {
         donut: true,
         donutSolid: true,
-        donutWidth: 175 - this.holeRadius,
+        donutWidth: (this.isNested ? 129 : 175) - this.holeRadius,
         chartPadding: 20,
-        labelOffset: 40,
+        labelOffset: this.isNested ? 27 : 50,
         labelDirection: 'explode',
         showLabel: !this.hideLabel,
         labelInterpolationFnc: (label, index) => {
@@ -204,6 +333,16 @@ javascript: (async () => {
             ? `${label}\n${ratio.toFixed(1)}%`
             : `${ratio.toFixed(1)}%`
         },
+      }
+    }
+
+    get subChartistOptions(): Chartist.IPieChartOptions {
+      return {
+        donut: true,
+        donutSolid: true,
+        donutWidth: 107 - this.holeRadius,
+        chartPadding: 88,
+        showLabel: false,
       }
     }
 
@@ -418,14 +557,20 @@ javascript: (async () => {
       selectEl.style['margin-bottom'] = '4px'
       containerEl.append(inputEl, selectEl)
 
+      const checkStyleEl = ImagePieChart._createCheckBoxElement(
+        '内訳を非表示',
+        !this.isNested,
+        (el) => {
+          this.isNested = !el.checked
+        })
       const checkLabelEl = ImagePieChart._createCheckBoxElement(
-        'ラベルを隠す',
+        'ラベルを非表示',
         this.hideLabel,
         (el) => {
           this.hideLabel = el.checked
         })
       const checkBackgroundEl = ImagePieChart._createCheckBoxElement(
-        '背景を透過する',
+        '背景を透過',
         this.transparentBackground,
         (el) => {
           this.transparentBackground = el.checked
@@ -444,6 +589,7 @@ javascript: (async () => {
     static _injectInputElements() {
       // inject custom input elements
       const cardNames = LocalStorage.getObject('cardNames', {})
+      const cardCheckedStates = LocalStorage.getObject('cardCheckedStates', {})
   
       Array.from(document.querySelectorAll('#cardImagesView > div > div > table > tbody'))
         .forEach((el) => {
@@ -461,7 +607,7 @@ javascript: (async () => {
             const countEl = el.querySelector('tr > td.cPos.nowrap > *')
             countEl.style['marginTop'] = 0
             countEl.style['marginBottom'] = 0
-  
+
             if (countEl.querySelector('span')) {
               const inputEl = document.createElement('input')
               inputEl.type = 'text'
@@ -497,6 +643,15 @@ javascript: (async () => {
               countEl.querySelector('br').remove()
             }
           }
+        const checkEl = el.querySelector('#chkImg_' + cardId)
+        if (
+          checkEl &&
+          typeof globalCardChecked !== 'undefined' &&
+          globalCardChecked.hasOwnProperty(cardId)
+        ) {
+          checkEl.checked = globalCardChecked[cardId]
+          checkEl.dispatchEvent(new Event('change'))
+        }
           const trEl = document.createElement('tr')
           const tdEl = document.createElement('td')
           tdEl.setAttribute('colspan', 2)
@@ -577,6 +732,7 @@ javascript: (async () => {
         signatureEl.remove()
       }
       this.chart.update(this.chartistData, this.chartistOptions)
+      this.subChart.update(this.subChartistData, this.subChartistOptions)
     }
 
     async onPress(el) {
@@ -588,16 +744,20 @@ javascript: (async () => {
       LocalStorage.setItem('otherRatio', this.otherRatio)
       LocalStorage.setItem('hideLabel', this.hideLabel)
       LocalStorage.setItem('transparentBackground', this.transparentBackground)
+      LocalStorage.setItem('isNested', this.isNested)
   
       const cards = fetchCards()
   
-      // save card names into the storage
+      // save card names and checked states into the storage
       const cardNames = LocalStorage.getObject('cardNames', {})
+      const cardCheckedStates = LocalStorage.getObject('cardCheckedStates', {})
       cards.forEach((card) => {
         cardNames[card.id] = card.name
+        cardCheckedStates[card.id] = card.checked
       })
       LocalStorage.setItem('cardNames', JSON.stringify(cardNames))
-  
+      LocalStorage.setItem('cardCheckedStates', JSON.stringify(cardCheckedStates))
+
       const chartData = cards.map((card) => {
         return {
           label: card.name,
@@ -684,6 +844,12 @@ javascript: (async () => {
   }
 
   const createDataURL = (url) => {
+    // If the URL does not match the expected pattern, return it as is
+    const matched = url.match(/^([^#]+)(#.+)?$/)
+    if (!matched) {
+      return new Promise((resolve) => resolve(url))
+    }
+
     return new Promise((resolve, reject) => {
       const image = new Image()
       image.crossOrigin = 'Anonymous'
@@ -693,10 +859,10 @@ javascript: (async () => {
         canvas.height = image.height
         const context = canvas.getContext('2d')
         context.drawImage(image, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
+        resolve(canvas.toDataURL('image/png') + (matched[2] || '')) // Append the hash part back to the data URL if it exists
       }
       image.onerror = reject
-      image.src = url
+      image.src = matched[1]
     })
   }
 
@@ -707,14 +873,16 @@ javascript: (async () => {
         const cardId = parseInt(imageEl.id.replace(/^img_([0-9]+)$/, '$1'), 10)
         const countEl = el.querySelector('tr > td.cPos.nowrap > *')
         const inputEl = countEl.querySelector('input[type="text"]')
+        const checkEl = el.querySelector(`#chkImg_${cardId}`)
+
         return {
           id: cardId,
           name: imageEl.alt,
           imageSrc: imageEl.src,
           count: parseInt(inputEl && inputEl.value || countEl.innerText, 10) || 0,
+          checked: checkEl.checked,
         }
       })
-      .filter((data) => data.count > 0)
   }
 
   const injectStyleSheet = (href) => {
