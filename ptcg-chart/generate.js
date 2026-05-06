@@ -25,7 +25,7 @@ javascript: (async () => {
       )
 
       this.renderedSlicesCount = 0
-      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
+      this.renderedSubSlicesCount = 0
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       this.onDraw = null
   
@@ -713,7 +713,7 @@ javascript: (async () => {
     draw(chartData, onDraw) {
       this.chartData = chartData
       this.renderedSlicesCount = 0
-      this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
+      this.renderedSubSlicesCount = 0
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
       console.log(`renderedSlicesCount: ${this.chartistData.series.length}`)
       console.log(`renderedSubSlicesCount: ${this.subChartistData.series.length}`)
