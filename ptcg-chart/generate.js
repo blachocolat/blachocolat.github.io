@@ -336,7 +336,7 @@ javascript: (async () => {
       }
     }
 
-    get subChartistOptions(): Chartist.IPieChartOptions {
+    get subChartistOptions() {
       return {
         donut: true,
         donutSolid: true,
