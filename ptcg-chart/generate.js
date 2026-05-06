@@ -97,6 +97,7 @@ javascript: (async () => {
             context.element._node.setAttribute('style', `fill: url(#${imageId})`)
 
             this.renderedSlicesCount += 1
+            console.log(`Rendered main slice: ${imageSrc}, count: ${this.renderedSlicesCount}`)
           } else if (context.type == 'label') {
             const lines = context.text.split('\n')
   
@@ -143,13 +144,14 @@ javascript: (async () => {
             }
 
             this.renderedLabelsCount += 1
+            console.log(`Rendered main label: ${context.text}, count: ${this.renderedLabelsCount}`)
           }
 
           // fire the callback when all images have been loaded
           if (
             this.onDraw &&
-            this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
-            this.renderedSubSlicesCount == this.subChartistData.imageSrcs.length &&
+            this.renderedSlicesCount == this.chartistData.series.length &&
+            this.renderedSubSlicesCount == this.subChartistData.series.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
             await this.onDraw()
@@ -223,13 +225,14 @@ javascript: (async () => {
             context.element._node.setAttribute('style', `fill: url(#${imageId})`)
 
             this.renderedSubSlicesCount += 1
+            console.log(`Rendered sub slice: ${imageSrc}, count: ${this.renderedSubSlicesCount}`)
           }
 
           // fire the callback when all images have been loaded
           if (
             this.onDraw &&
-            this.renderedSlicesCount == this.chartistData.imageSrcs.length &&
-            this.renderedSubSlicesCount == this.subChartistData.imageSrcs.length &&
+            this.renderedSlicesCount == this.chartistData.series.length &&
+            this.renderedSubSlicesCount == this.subChartistData.series.length &&
             this.renderedLabelsCount == this.chartistData.labels.length
           ) {
             await this.onDraw()
@@ -707,6 +710,9 @@ javascript: (async () => {
       this.renderedSlicesCount = 0
       this.renderedSubSlicesCount = this.isNested ? 0 : this.subChartistData.series.length
       this.renderedLabelsCount = this.hideLabel ? this.chartistData.labels.length : 0
+      console.log(`renderedSlicesCount: ${this.chartistData.series.length}`)
+      console.log(`renderedSubSlicesCount: ${this.subChartistData.series.length}`)
+      console.log(`renderedLabelsCount: ${this.chartistData.labels.length}`)
 
       // draw the title
       const titleBorderEl = document.createElement('div')
