@@ -238,7 +238,7 @@ javascript: (async () => {
       )
     }
 
-    get filteredChartData(): ImagePieChartData[] {
+    get filteredChartData() {
       const sorted = [...this.chartData].sort((a, b) => b.value - a.value)
       const total = sorted.map((d) => d.value).reduce((a, b) => a + b, 0)
       let subTotal = 0
