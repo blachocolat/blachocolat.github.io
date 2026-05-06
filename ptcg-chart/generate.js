@@ -763,20 +763,44 @@ javascript: (async () => {
       // save card names and checked states into the storage
       const cardNames = LocalStorage.getObject('cardNames', {})
       const cardCheckedStates = LocalStorage.getObject('cardCheckedStates', {})
-      cards.forEach((card) => {
-        cardNames[card.id] = card.name
-        cardCheckedStates[card.id] = card.checked
+      cards.forEach((data) => {
+        cardNames[data.id] = data.name
+        cardCheckedStates[data.id] = data.checked
       })
       LocalStorage.setItem('cardNames', JSON.stringify(cardNames))
       LocalStorage.setItem('cardCheckedStates', JSON.stringify(cardCheckedStates))
 
-      const chartData = cards.map((card) => {
-        return {
-          label: card.name,
-          value: card.count,
-          imageSrc: card.imageSrc,
+      const chartData = [] // reset the chart data before processing new data
+      cards.forEach((data) => {
+        if (!data.checked) {
+          // if the card is not checked, add it as a new entry in chartData
+          chartData.push({
+            label: data.name,
+            value: data.count,
+            imageSrc: data.imageSrc,
+            children: [
+              {
+                label: data.name,
+                value: data.count,
+                imageSrc: data.imageSrc,
+              },
+            ],
+          })
+        } else {
+          // if the card is checked, add its count to the last entry in chartData
+          const lastItem = chartData[chartData.length - 1]
+          if (lastItem?.children) {
+            lastItem.children.push({
+              label: data.name,
+              value: data.count,
+              imageSrc: data.imageSrc,
+            })
+            lastItem.value += data.count
+          }
         }
       })
+
+      // draw the chart and open it as PNG after all slices have been rendered
       this.draw(chartData, async () => {
         await this.openAsPNG()
         el.classList.remove('disabled')
